@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    name: "Python ${{ matrix.python-version }} ${{ matrix.os }}"
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: Gr1N/setup-poetry@v7
+      - name: Install dependencies
+        run: poetry install
+      - name: Static type and format checking
+        run: python script/check.py
+
+  publish:
+    needs: tests
+    if: startsWith(github.ref, 'refs/tags/')
+
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        python-version: [3.7]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: Gr1N/setup-poetry@v7
+      - name: Install dependencies
+        run: poetry install
+      - name: Build
+        run: poetry build
+      - name: Publish
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: poetry publish

@@ -11,14 +11,20 @@ class EventSender:
         self.move_steps_delay = move_steps_delay
 
     def keycode(self, keycode, action=const.ACTION_DOWN):
-        self.parent.control_socket.send(struct.pack('>BBII', 0, action, keycode, 0))
+        self.parent.control_socket.send(struct.pack(">BBII", 0, action, keycode, 0))
 
     def touch(self, x, y, action=const.ACTION_DOWN):
-        b = struct.pack('>BB', 2, action)
-        b += b'\xff\xff\xff\xff\xff\xff\xff\xff'
-        b += struct.pack('>IIhh', int(x), int(y), int(self.parent.resolution[0]), int(self.parent.resolution[1]))
-        b += b'\xff\xff'  # Pressure
-        b += b'\x00\x00\x00\x01'  # Event button primary
+        b = struct.pack(">BB", 2, action)
+        b += b"\xff\xff\xff\xff\xff\xff\xff\xff"
+        b += struct.pack(
+            ">IIhh",
+            int(x),
+            int(y),
+            int(self.parent.resolution[0]),
+            int(self.parent.resolution[1]),
+        )
+        b += b"\xff\xff"  # Pressure
+        b += b"\x00\x00\x00\x01"  # Event button primary
         self.parent.control_socket.send(b)
 
     def swipe(self, start_x, start_y, end_x, end_y):

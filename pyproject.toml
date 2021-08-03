@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "scrcpy-client"
+version = "0.1.0"
+description = "A client for scrcpy"
+authors = ["lengyue <lengyue@lengyue.me>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+av = "^8.0.3"
+opencv-python = "^4.5.3"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.9.2"
+isort = "^5.9.3"
+black = "^21.7b0"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

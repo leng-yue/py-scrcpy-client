@@ -4,7 +4,6 @@ import socket
 import struct
 import subprocess
 import sys
-import numpy as np
 from time import sleep
 
 import av
@@ -12,14 +11,24 @@ import av
 from .event import EventSender
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                    format='%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 class Client:
-    def __init__(self, max_width=0, bitrate=8000000, max_fps=30, adb_path='/usr/local/bin/adb',
-                 ip='127.0.0.1', port=8081):
+    def __init__(
+        self,
+        max_width=0,
+        bitrate=8000000,
+        max_fps=30,
+        adb_path="/usr/local/bin/adb",
+        ip="127.0.0.1",
+        port=8081,
+    ):
         """
 
         :param max_width: frame width that will be broadcast from android server
@@ -39,7 +48,7 @@ class Client:
         self.adb_path = adb_path
 
         assert self.deploy_server(max_width, bitrate, max_fps)
-        self.codec = av.codec.CodecContext.create('h264', 'r')
+        self.codec = av.codec.CodecContext.create("h264", "r")
         self.init_server_connection()
 
         self.event = EventSender(self)
@@ -77,10 +86,16 @@ class Client:
             logger.info("Upload JAR...")
 
             server_root = os.path.abspath(os.path.dirname(__file__))
-            server_file_path = server_root + '/scrcpy-server.jar'
-            adb_push = subprocess.Popen([self.adb_path, 'push', server_file_path, '/data/local/tmp/'],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=server_root)
-            adb_push_comm = ''.join([x.decode("utf-8") for x in adb_push.communicate() if x is not None])
+            server_file_path = server_root + "/scrcpy-server.jar"
+            adb_push = subprocess.Popen(
+                [self.adb_path, "push", server_file_path, "/data/local/tmp/"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=server_root,
+            )
+            adb_push_comm = "".join(
+                [x.decode("utf-8") for x in adb_push.communicate() if x is not None]
+            )
 
             if "error" in adb_push_comm:
                 logger.critical("Is your device/emulator visible to ADB?")
@@ -88,20 +103,30 @@ class Client:
 
             logger.info("Running server...")
             subprocess.Popen(
-                [self.adb_path, 'shell',
-                 'CLASSPATH=/data/local/tmp/scrcpy-server.jar',
-                 'app_process', '/', 'com.genymobile.scrcpy.Server 1.12.1 {} {} {} true - false true'.format(
-                    max_width, bitrate, max_fps)],
-                cwd=server_root)
+                [
+                    self.adb_path,
+                    "shell",
+                    "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
+                    "app_process",
+                    "/",
+                    "com.genymobile.scrcpy.Server 1.12.1 {} {} {} true - false true".format(
+                        max_width, bitrate, max_fps
+                    ),
+                ],
+                cwd=server_root,
+            )
             sleep(1)
 
             logger.info("Forward server port...")
             subprocess.Popen(
-                [self.adb_path, 'forward', 'tcp:8081', 'localabstract:scrcpy'],
-                cwd=server_root).wait()
+                [self.adb_path, "forward", "tcp:8081", "localabstract:scrcpy"],
+                cwd=server_root,
+            ).wait()
             sleep(2)
         except FileNotFoundError:
-            raise FileNotFoundError("Couldn't find ADB at path ADB_bin: " + str(self.adb_path))
+            raise FileNotFoundError(
+                "Couldn't find ADB at path ADB_bin: " + str(self.adb_path)
+            )
 
         return True
 
@@ -122,7 +147,7 @@ class Client:
                     frames = self.codec.decode(packet)
                     for frame in frames:
                         yield frame.to_ndarray(format="bgr24")
-            except:
+            except BlockingIOError:
                 yield None
 
     def add_listener(self, func):
