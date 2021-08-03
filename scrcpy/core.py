@@ -7,6 +7,7 @@ import sys
 from time import sleep
 
 import av
+import cv2
 
 from .event import EventSender
 
@@ -28,6 +29,7 @@ class Client:
         adb_path="/usr/local/bin/adb",
         ip="127.0.0.1",
         port=8081,
+        flip=False
     ):
         """
 
@@ -37,6 +39,7 @@ class Client:
         :param ip: android server IP
         :param adb_path: path to ADB
         :param port: android server port
+        :param flip: flip the video
         """
         self.ip = ip
         self.port = port
@@ -46,6 +49,7 @@ class Client:
         self.control_socket = None
         self.resolution = None
         self.adb_path = adb_path
+        self.flip = flip
 
         assert self.deploy_server(max_width, bitrate, max_fps)
         self.codec = av.codec.CodecContext.create("h264", "r")
@@ -146,7 +150,10 @@ class Client:
                 for packet in packets:
                     frames = self.codec.decode(packet)
                     for frame in frames:
-                        yield frame.to_ndarray(format="bgr24")
+                        frame = frame.to_ndarray(format="bgr24")
+                        if self.flip:
+                            frame = cv2.flip(frame, 1)
+                        yield frame
             except BlockingIOError:
                 yield None
 
