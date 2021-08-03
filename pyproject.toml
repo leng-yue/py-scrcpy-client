@@ -3,6 +3,12 @@ name = "scrcpy-client"
 version = "0.1.0"
 description = "A client for scrcpy"
 authors = ["lengyue <lengyue@lengyue.me>"]
+readme = "README.md"
+repository = "https://github.com/leng-yue/py-scrcpy-client"
+license = "MIT"
+packages = [
+    { include = "scrcpy" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
