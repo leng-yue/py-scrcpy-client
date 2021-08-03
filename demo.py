@@ -36,6 +36,8 @@ def map_code(code):
         return 62
     if code == 13:
         return 66
+    if code == 47:
+        client.control.text("test string")
     return -1
 
 
@@ -49,6 +51,7 @@ def on_frame(frame):
     if frame is not None:
         cv2.imshow("ui", frame)
     code = map_code(cv2.waitKey(10))
+
     if code != -1:
         client.control.keycode(code, scrcpy.ACTION_DOWN)
         client.control.keycode(code, scrcpy.ACTION_UP)

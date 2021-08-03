@@ -9,21 +9,29 @@ class ControlSender:
         self.parent = parent
 
     def keycode(self, keycode: int, action: int = const.ACTION_DOWN):
-        self.parent.control_socket.send(struct.pack(">BBII", 0, action, keycode, 0))
+        package = struct.pack(">BBII", const.TYPE_INJECT_KEYCODE, action, keycode, 0)
+        self.parent.control_socket.send(package)
 
     def touch(self, x: int, y: int, action: int = const.ACTION_DOWN):
-        b = struct.pack(">BB", 2, action)
-        b += b"\xff\xff\xff\xff\xff\xff\xff\xff"
-        b += struct.pack(
-            ">IIhh",
+        x, y = max(x, 0), max(y, 0)
+        package = struct.pack(
+            ">BBQIIHHHI",
+            const.TYPE_INJECT_TOUCH_EVENT,
+            action,
+            0xFFFFFFFFFFFFFFFF,
             int(x),
             int(y),
             int(self.parent.resolution[0]),
             int(self.parent.resolution[1]),
+            0xFFFF,
+            1,
         )
-        b += b"\xff\xff"  # Pressure
-        b += b"\x00\x00\x00\x01"  # Event button primary
-        self.parent.control_socket.send(b)
+        self.parent.control_socket.send(package)
+
+    def text(self, string: str):
+        buffer = string.encode("utf-8")
+        package = struct.pack(">BH", const.TYPE_INJECT_TEXT, len(buffer)) + buffer
+        self.parent.control_socket.send(package)
 
     def swipe(
         self,
