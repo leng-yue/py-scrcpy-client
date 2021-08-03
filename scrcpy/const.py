@@ -1,0 +1,8 @@
+# Action
+ACTION_DOWN = 0
+ACTION_UP = 1
+ACTION_MOVE = 2
+
+# KeyCode
+KEYCODE_HOME = 3
+KEYCODE_BACK = 4

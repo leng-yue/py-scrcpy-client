@@ -9,7 +9,7 @@ from time import sleep
 
 import av
 
-from control import ControlMixin
+from .event import EventSender
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
@@ -17,13 +17,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
-class AndroidViewer(ControlMixin):
-    video_socket = None
-    control_socket = None
-    resolution = None
-
-    video_data_queue = Queue()
-
+class Client:
     def __init__(self, max_width=0, bitrate=8000000, max_fps=30, adb_path='/usr/local/bin/adb',
                  ip='127.0.0.1', port=8081):
         """
@@ -39,25 +33,16 @@ class AndroidViewer(ControlMixin):
         self.port = port
         self.listeners = []
         self.last_frame = None
+        self.video_socket = None
+        self.control_socket = None
+        self.resolution = None
         self.adb_path = adb_path
 
         assert self.deploy_server(max_width, bitrate, max_fps)
-
         self.codec = av.codec.CodecContext.create('h264', 'r')
         self.init_server_connection()
 
-    def receiver(self):
-        """
-        Read h264 video data from video socket and put it in Queue.
-        This method should work in separate thread since it's blocking.
-        """
-        while True:
-            raw_h264 = self.video_socket.recv(0x10000)
-
-            if not raw_h264:
-                continue
-
-            self.video_data_queue.put(raw_h264)
+        self.event = EventSender(self.resolution, self.control_socket)
 
     def init_server_connection(self):
         """

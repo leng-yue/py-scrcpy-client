@@ -2,17 +2,16 @@ import struct
 from time import sleep
 
 
-class ControlMixin:
+class EventSender:
     ACTION_MOVE = 2
     ACTION_DOWN = 0
     ACTION_UP = 1
 
-    move_step_length = 5  # Move by 5 pixels in one iteration
-    move_steps_delay = 0.005  # Delay between each move step
-
-    # Define in base class
-    resolution = None
-    control_socket = None
+    def __init__(self, resolution, control_socket, move_step_length=5, move_steps_delay=0.005):
+        self.resolution = resolution
+        self.control_socket = control_socket
+        self.move_step_length = move_step_length
+        self.move_steps_delay = move_steps_delay
 
     def _build_touch_message(self, x, y, action):
         b = struct.pack('>BB', 2, action)
@@ -22,7 +21,7 @@ class ControlMixin:
         b += b'\x00\x00\x00\x01'  # Event button primary
         return bytes(b)
 
-    def send_key_event(self, keycode, action):
+    def keycode(self, keycode, action=ACTION_DOWN):
         self.control_socket.send(struct.pack('>BBII', 0, action, keycode, 0))
 
     def swipe(self, start_x, start_y, end_x, end_y):
@@ -64,5 +63,5 @@ class ControlMixin:
                 break
             sleep(self.move_steps_delay)
 
-    def send_event(self, x, y, action=ACTION_DOWN):
+    def touch(self, x, y, action=ACTION_DOWN):
         self.control_socket.send(self._build_touch_message(x=x, y=y, action=action))
