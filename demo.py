@@ -1,29 +1,23 @@
 import cv2
 import scrcpy
 
-client = scrcpy.Client(adb_path="adb/adb.exe", max_width=800, max_fps=60)
+client = scrcpy.Client(adb_path="adb/adb.exe", max_width=800)
 
 
 def mouse_click(event, x, y, flags, param):
     # Bind left button
     if event == cv2.EVENT_LBUTTONDOWN:
-        client.event.touch(x, y, scrcpy.ACTION_DOWN)
-        mouse_down = True
+        client.control.touch(x, y, scrcpy.ACTION_DOWN)
     if event == cv2.EVENT_LBUTTONUP:
-        client.event.touch(x, y, scrcpy.ACTION_UP)
-        mouse_down = False
+        client.control.touch(x, y, scrcpy.ACTION_UP)
     if event == cv2.EVENT_MOUSEMOVE:
-        client.event.touch(x, y, scrcpy.ACTION_MOVE)
+        client.control.touch(x, y, scrcpy.ACTION_MOVE)
 
     # Bind right button to home
     if event == cv2.EVENT_RBUTTONDOWN:
-        client.event.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
+        client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
     if event == cv2.EVENT_RBUTTONUP:
-        client.event.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
-
-
-cv2.namedWindow("game")
-cv2.setMouseCallback('game', mouse_click)
+        client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
 
 
 # Mapping numbers, english chars, delete
@@ -45,14 +39,22 @@ def map_code(code):
     return -1
 
 
-def listener(frame):
+def on_init():
+    cv2.namedWindow("ui")
+    cv2.setMouseCallback("ui", mouse_click)
+    cv2.setWindowTitle("ui", client.device_name)
+
+
+def on_frame(frame):
     if frame is not None:
-        cv2.imshow('game', frame)
+        cv2.imshow("ui", frame)
     code = map_code(cv2.waitKey(10))
     if code != -1:
-        client.event.keycode(code, scrcpy.ACTION_DOWN)
-        client.event.keycode(code, scrcpy.ACTION_UP)
+        client.control.keycode(code, scrcpy.ACTION_DOWN)
+        client.control.keycode(code, scrcpy.ACTION_UP)
 
 
-client.add_listener(listener)
-client.listen()
+if __name__ == "__main__":
+    client.add_listener("init", on_init)
+    client.add_listener("frame", on_frame)
+    client.start()

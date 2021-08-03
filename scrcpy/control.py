@@ -4,7 +4,7 @@ from time import sleep
 from scrcpy import const
 
 
-class EventSender:
+class ControlSender:
     def __init__(self, parent, move_step_length=5, move_steps_delay=0.005):
         self.parent = parent
         self.move_step_length = move_step_length

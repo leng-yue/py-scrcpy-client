@@ -10,3 +10,7 @@ Document is not finished, you can check `demo.py` for detail.
 
 ## Add ability
 Please check scrcpy 1.12.1 document: [Link](https://github.com/Genymobile/scrcpy/blob/v1.12.1/server/src/main/java/com/genymobile/scrcpy/ControlMessageReader.java)
+
+## TODO:
+- [ ] Update scrcpy to 1.19
+- [ ] Add control unit test

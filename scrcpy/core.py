@@ -1,23 +1,15 @@
-import logging
 import os
 import socket
 import struct
 import subprocess
-import sys
 from time import sleep
+from typing import Any, Callable, Generator, Optional
 
-import av
 import cv2
+import numpy as np
+from av.codec import CodecContext
 
-from .event import EventSender
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+from .control import ControlSender
 
 
 class Client:
@@ -25,14 +17,15 @@ class Client:
         self,
         max_width=0,
         bitrate=8000000,
-        max_fps=30,
+        max_fps=0,
         adb_path="/usr/local/bin/adb",
         ip="127.0.0.1",
         port=8081,
-        flip=False
+        flip=False,
+        block_frame=False,
     ):
         """
-
+        Create a scrcpy client, this client won't be started until you call the start function
         :param max_width: frame width that will be broadcast from android server
         :param bitrate:
         :param max_fps: 0 means not max fps.
@@ -40,29 +33,31 @@ class Client:
         :param adb_path: path to ADB
         :param port: android server port
         :param flip: flip the video
+        :param block_frame: whether block video reading or not
         """
+
         self.ip = ip
         self.port = port
-        self.listeners = []
+        self.listeners = dict(frame=[], init=[])
         self.last_frame = None
         self.video_socket = None
         self.control_socket = None
         self.resolution = None
         self.adb_path = adb_path
         self.flip = flip
-
-        assert self.deploy_server(max_width, bitrate, max_fps)
-        self.codec = av.codec.CodecContext.create("h264", "r")
-        self.init_server_connection()
-
-        self.event = EventSender(self)
+        self.device_name = None
+        self.control = ControlSender(self)
+        self.max_width = max_width
+        self.bitrate = bitrate
+        self.max_fps = max_fps
+        self.block_frame = block_frame
 
     def init_server_connection(self):
         """
         Connect to android server, there will be two sockets, video and control socket.
         This method will set: video_socket, control_socket, resolution variables
         """
-        logger.info("Connecting video socket")
+
         self.video_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.video_socket.connect((self.ip, self.port))
 
@@ -70,92 +65,116 @@ class Client:
         if not len(dummy_byte):
             raise ConnectionError("Did not receive Dummy Byte!")
 
-        logger.info("Connecting control socket")
         self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.control_socket.connect((self.ip, self.port))
 
-        device_name = self.video_socket.recv(64).decode("utf-8")
+        self.device_name = self.video_socket.recv(64).decode("utf-8")
 
-        if not len(device_name):
+        if not len(self.device_name):
             raise ConnectionError("Did not receive Device Name!")
-        logger.info("Device Name: " + device_name)
 
         res = self.video_socket.recv(4)
         self.resolution = struct.unpack(">HH", res)
-        logger.info("Screen resolution: %s", self.resolution)
         self.video_socket.setblocking(False)
 
-    def deploy_server(self, max_width=1024, bitrate=8000000, max_fps=0):
-        try:
-            logger.info("Upload JAR...")
+    def deploy_server(self):
+        """
+        Deploy server to android device
+        """
 
-            server_root = os.path.abspath(os.path.dirname(__file__))
-            server_file_path = server_root + "/scrcpy-server.jar"
-            adb_push = subprocess.Popen(
-                [self.adb_path, "push", server_file_path, "/data/local/tmp/"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=server_root,
-            )
-            adb_push_comm = "".join(
-                [x.decode("utf-8") for x in adb_push.communicate() if x is not None]
-            )
-
-            if "error" in adb_push_comm:
-                logger.critical("Is your device/emulator visible to ADB?")
-                raise Exception(adb_push_comm)
-
-            logger.info("Running server...")
-            subprocess.Popen(
-                [
-                    self.adb_path,
-                    "shell",
-                    "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
-                    "app_process",
-                    "/",
-                    "com.genymobile.scrcpy.Server 1.12.1 {} {} {} true - false true".format(
-                        max_width, bitrate, max_fps
-                    ),
-                ],
-                cwd=server_root,
-            )
-            sleep(1)
-
-            logger.info("Forward server port...")
-            subprocess.Popen(
-                [self.adb_path, "forward", "tcp:8081", "localabstract:scrcpy"],
-                cwd=server_root,
-            ).wait()
-            sleep(2)
-        except FileNotFoundError:
+        if not os.path.exists(self.adb_path):
             raise FileNotFoundError(
                 "Couldn't find ADB at path ADB_bin: " + str(self.adb_path)
             )
 
-        return True
+        server_root = os.path.abspath(os.path.dirname(__file__))
+        server_file_path = server_root + "/scrcpy-server.jar"
+        adb_push = subprocess.Popen(
+            [self.adb_path, "push", server_file_path, "/data/local/tmp/"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=server_root,
+        )
+        adb_push_comm = "".join(
+            [x.decode("utf-8") for x in adb_push.communicate() if x is not None]
+        )
 
-    def listen(self):
-        for i in self.stream_generator():
+        if "error" in adb_push_comm:
+            raise ConnectionError("Is your device/emulator visible to ADB?")
+
+        subprocess.Popen(
+            [
+                self.adb_path,
+                "shell",
+                "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
+                "app_process",
+                "/",
+                "com.genymobile.scrcpy.Server 1.12.1 {} {} {} true - false true".format(
+                    self.max_width, self.bitrate, self.max_fps
+                ),
+            ],
+            cwd=server_root,
+        )
+        sleep(1)
+
+        subprocess.Popen(
+            [self.adb_path, "forward", f"tcp:{self.port}", "localabstract:scrcpy"],
+            cwd=server_root,
+        ).wait()
+        sleep(1)
+
+    def start(self) -> None:
+        """
+        Start listening video stream
+        """
+        self.deploy_server()
+        self.init_server_connection()
+        self.__send_to_listeners("init")
+
+        for i in self.__stream_generator():
             if i is not None:
                 self.last_frame = i
                 self.resolution = (i.shape[1], i.shape[0])
-            for fun in self.listeners:
-                fun(i)
+            self.__send_to_listeners("frame", i)
 
-    def stream_generator(self):
+    def __stream_generator(self) -> Generator[Optional[np.ndarray], None, None]:
+        """
+        Parsing h264 stream to frames
+        :return: frames
+        """
+        codec = CodecContext.create("h264", "r")
+
         while True:
             try:
                 raw_h264 = self.video_socket.recv(0x10000)
-                packets = self.codec.parse(raw_h264)
+                packets = codec.parse(raw_h264)
                 for packet in packets:
-                    frames = self.codec.decode(packet)
+                    frames = codec.decode(packet)
                     for frame in frames:
                         frame = frame.to_ndarray(format="bgr24")
                         if self.flip:
                             frame = cv2.flip(frame, 1)
                         yield frame
             except BlockingIOError:
-                yield None
+                if not self.block_frame:
+                    yield None
 
-    def add_listener(self, func):
-        self.listeners.append(func)
+    def add_listener(self, cls: str, listener: Callable[..., Any]) -> None:
+        """
+        Add a video listener
+        :param cls: Listener category, support: init, frame
+        :param listener: A function to receive frame np.ndarray
+        """
+        self.listeners[cls].append(listener)
+
+    def remove_listener(self, cls: str, listener: Callable[..., Any]) -> None:
+        """
+        Remove a video listener
+        :param cls: Listener category, support: init, frame
+        :param listener: A function to receive frame np.ndarray
+        """
+        self.listeners[cls].remove(listener)
+
+    def __send_to_listeners(self, cls: str, *args, **kwargs):
+        for fun in self.listeners[cls]:
+            fun(*args, **kwargs)
