@@ -57,8 +57,6 @@ jobs:
           python -m pip install --upgrade pip poetry
           poetry config virtualenvs.create false --local
           poetry install
-      - name: Install dependencies
-        run: poetry install
       - name: Build
         run: poetry build
       - name: Publish
