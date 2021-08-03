@@ -15,14 +15,14 @@ from .control import ControlSender
 class Client:
     def __init__(
         self,
-        max_width=0,
-        bitrate=8000000,
-        max_fps=0,
-        adb_path="/usr/local/bin/adb",
-        ip="127.0.0.1",
-        port=8081,
-        flip=False,
-        block_frame=False,
+        max_width: int = 0,
+        bitrate: int = 8000000,
+        max_fps: int = 0,
+        adb_path: str = "/usr/local/bin/adb",
+        ip: str = "127.0.0.1",
+        port: int = 8081,
+        flip: bool = False,
+        block_frame: bool = False,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
