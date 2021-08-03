@@ -1,16 +1,29 @@
 # Python Scrcpy Client
 
+![pypi package](https://badge.fury.io/py/scrcpy-client.svg)
+![workflow](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+
 This package allows you to view and control android device in realtime. 
 
-Document is not finished, you can check `demo.py` for detail.
+## How to use
+To begin with, you need to install this package via pip:
+```shell
+pip install scrcpy-client
+```
+Then, you can start `demo.py`:
+```shell
+python demo.py
+```
+Note: You need to install adb by yourself.
+
+## Contribution & Development
+Please check scrcpy server 1.12.1 source code: [Link](https://github.com/Genymobile/scrcpy/blob/v1.12.1/server/src/main/java/com/genymobile/scrcpy/ControlMessageReader.java)
+
+## TODO:
+- [x] Support all KeyCodes
+- [ ] Update scrcpy to 1.19
+- [ ] Add control unit test
 
 ## Reference
 - [py-android-viewer](https://github.com/razumeiko/py-android-viewer)
 - [scrcpy](https://github.com/Genymobile/scrcpy)
-
-## Add ability
-Please check scrcpy 1.12.1 document: [Link](https://github.com/Genymobile/scrcpy/blob/v1.12.1/server/src/main/java/com/genymobile/scrcpy/ControlMessageReader.java)
-
-## TODO:
-- [ ] Update scrcpy to 1.19
-- [ ] Add control unit test
