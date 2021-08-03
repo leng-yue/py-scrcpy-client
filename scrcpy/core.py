@@ -27,13 +27,13 @@ class Client:
         """
         Create a scrcpy client, this client won't be started until you call the start function
         :param max_width: frame width that will be broadcast from android server
-        :param bitrate:
-        :param max_fps: 0 means not max fps.
+        :param bitrate: bitrate
+        :param max_fps: 0 means not max fps. supported after android 10
+        :param adb_path: adb path
         :param ip: android server IP
-        :param adb_path: path to ADB
         :param port: android server port
         :param flip: flip the video
-        :param block_frame: whether block video reading or not
+        :param block_frame: only return nonempty frames, may block cv2 render thread
         """
 
         self.ip = ip
