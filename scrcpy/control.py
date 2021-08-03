@@ -8,16 +8,16 @@ class ControlSender:
     def __init__(self, parent):
         self.parent = parent
 
-    def keycode(self, keycode: int, action: int = const.ACTION_DOWN):
+    def keycode(self, keycode: int, action: int = const.ACTION_DOWN) -> None:
         package = struct.pack(
-            ">BBIII", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0
+            ">BBiii", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0
         )
         self.parent.control_socket.send(package)
 
-    def touch(self, x: int, y: int, action: int = const.ACTION_DOWN):
+    def touch(self, x: int, y: int, action: int = const.ACTION_DOWN) -> None:
         x, y = max(x, 0), max(y, 0)
         package = struct.pack(
-            ">BBQIIHHHI",
+            ">BBQiiHHHi",
             const.TYPE_INJECT_TOUCH_EVENT,
             action,
             0xFFFFFFFFFFFFFFFF,
@@ -30,9 +30,32 @@ class ControlSender:
         )
         self.parent.control_socket.send(package)
 
-    def text(self, string: str):
+    def text(self, string: str) -> None:
         buffer = string.encode("utf-8")
         package = struct.pack(">Bi", const.TYPE_INJECT_TEXT, len(buffer)) + buffer
+        self.parent.control_socket.send(package)
+
+    def scroll(self, x: int, y: int, h: int, v: int) -> None:
+        x, y = max(x, 0), max(y, 0)
+        package = struct.pack(
+            ">BiiHHii",
+            const.TYPE_INJECT_SCROLL_EVENT,
+            int(x),
+            int(y),
+            int(self.parent.resolution[0]),
+            int(self.parent.resolution[1]),
+            int(h),
+            int(v),
+        )
+        self.parent.control_socket.send(package)
+
+    def back_or_turn_screen_on(self, action: int = const.ACTION_DOWN) -> None:
+        """
+        If the screen is off, it is turned on only on ACTION_DOWN
+        :param action: const.ACTION_*
+        """
+
+        package = struct.pack(">BB", const.TYPE_BACK_OR_SCREEN_ON, action)
         self.parent.control_socket.send(package)
 
     def swipe(
@@ -43,7 +66,7 @@ class ControlSender:
         end_y: int,
         move_step_length: int = 5,
         move_steps_delay: float = 0.005,
-    ):
+    ) -> None:
         self.touch(start_x, start_y, const.ACTION_DOWN)
         next_x = start_x
         next_y = start_y

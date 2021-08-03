@@ -20,7 +20,7 @@ def mouse_click(event, x, y, flags, param):
         client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
 
 
-# Mapping numbers, english chars, delete
+# Mapping numbers, english chars, some other operations
 def map_code(code):
     if code == -1:
         return -1
@@ -36,8 +36,11 @@ def map_code(code):
         return 62
     if code == 13:
         return 66
-    if code == 47:
+    if code == 91:
         client.control.text("test string")
+    if code == 93:
+        client.control.back_or_turn_screen_on(scrcpy.ACTION_DOWN)
+        client.control.back_or_turn_screen_on(scrcpy.ACTION_UP)
     return -1
 
 
