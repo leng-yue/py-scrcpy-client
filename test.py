@@ -26,21 +26,16 @@ def mouse_click(event, x, y, flags, param):
     if event == cv2.EVENT_RBUTTONUP:
         android.send_key_event(3, android.ACTION_UP)
 
+
 cv2.namedWindow("game")
 cv2.setMouseCallback('game', mouse_click)
 
-for frame in android.stream_generator():
+
+def listener(frame):
     if frame is not None:
         cv2.imshow('game', frame)
     cv2.waitKey(1)
 
-# while True:
-#     frames = android.get_next_frames()
-#     if frames is None:
-#         cv2.waitKey(1)
-#         continue
-#
-#     for frame in frames:
-#         print("Render", time.time())
-#         cv2.imshow('game', frame)
-#         cv2.waitKey(1)
+
+android.add_listener(listener)
+android.listen()

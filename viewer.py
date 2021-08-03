@@ -37,7 +37,8 @@ class AndroidViewer(ControlMixin):
         """
         self.ip = ip
         self.port = port
-
+        self.listeners = []
+        self.last_frame = None
         self.adb_path = adb_path
 
         assert self.deploy_server(max_width, bitrate, max_fps)
@@ -119,34 +120,11 @@ class AndroidViewer(ControlMixin):
 
         return True
 
-    def get_next_frames(self):
-        """
-        Get raw h264 video, parse packets, decode each packet to frames and convert
-        each frame to numpy array.
-        :return:
-        """
-
-        try:
-            raw_h264 = self.video_socket.recv(0x10000)
-            packets = self.codec.parse(raw_h264)
-
-            if not packets:
-                return None
-
-        except socket.error as e:
-            return None
-
-        if not packets:
-            return None
-
-        result_frames = []
-
-        for packet in packets:
-            frames = self.codec.decode(packet)
-            for frame in frames:
-                result_frames.append(frame.to_ndarray(format="bgr24"))
-
-        return result_frames or None
+    def listen(self):
+        for i in self.stream_generator():
+            self.last_frame = i
+            for fun in self.listeners:
+                fun(i)
 
     def stream_generator(self):
         while True:
@@ -159,3 +137,6 @@ class AndroidViewer(ControlMixin):
                         yield frame.to_ndarray(format="bgr24")
             except:
                 yield None
+
+    def add_listener(self, func):
+        self.listeners.append(func)
