@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 from av.codec import CodecContext
 
-from .const import EVENT_FRAME, EVENT_INIT
+from .const import EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
 from .control import ControlSender
 
 
@@ -24,6 +24,8 @@ class Client:
         port: int = 8081,
         flip: bool = False,
         block_frame: bool = False,
+        stay_awake: bool = False,
+        lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -35,6 +37,8 @@ class Client:
         :param port: android server port
         :param flip: flip the video
         :param block_frame: only return nonempty frames, may block cv2 render thread
+        :param stay_awake: keep Android device awake
+        :param lock_screen_orientation: lock screen orientation
         """
 
         self.ip = ip
@@ -52,6 +56,8 @@ class Client:
         self.bitrate = bitrate
         self.max_fps = max_fps
         self.block_frame = block_frame
+        self.stay_awake = stay_awake
+        self.lock_screen_orientation = lock_screen_orientation
 
     def init_server_connection(self):
         """
@@ -110,8 +116,8 @@ class Client:
                 "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
                 "app_process",
                 "/",
-                "com.genymobile.scrcpy.Server 1.18 info {} {} {} -1 true - false true 0 false true - - false".format(
-                    self.max_width, self.bitrate, self.max_fps
+                "com.genymobile.scrcpy.Server 1.18 info {} {} {} {} true - false true 0 false {} - - false".format(
+                    self.max_width, self.bitrate, self.max_fps, self.lock_screen_orientation, "true" if self.stay_awake else "false"
                 ),
             ],
             cwd=server_root,
