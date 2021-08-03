@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from av.codec import CodecContext
 
+from .const import EVENT_FRAME, EVENT_INIT
 from .control import ControlSender
 
 
@@ -129,13 +130,14 @@ class Client:
         """
         self.deploy_server()
         self.init_server_connection()
-        self.__send_to_listeners("init")
+        self.__send_to_listeners(EVENT_INIT)
 
+        # Frame loop
         for i in self.__stream_generator():
             if i is not None:
                 self.last_frame = i
                 self.resolution = (i.shape[1], i.shape[0])
-            self.__send_to_listeners("frame", i)
+            self.__send_to_listeners(EVENT_FRAME, i)
 
     def __stream_generator(self) -> Generator[Optional[np.ndarray], None, None]:
         """

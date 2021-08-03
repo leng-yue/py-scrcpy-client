@@ -55,6 +55,6 @@ def on_frame(frame):
 
 
 if __name__ == "__main__":
-    client.add_listener("init", on_init)
-    client.add_listener("frame", on_frame)
+    client.add_listener(scrcpy.EVENT_INIT, on_init)
+    client.add_listener(scrcpy.EVENT_FRAME, on_frame)
     client.start()
