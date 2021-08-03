@@ -4,7 +4,7 @@ import socket
 import struct
 import subprocess
 import sys
-from queue import Queue
+import numpy as np
 from time import sleep
 
 import av
@@ -42,7 +42,7 @@ class Client:
         self.codec = av.codec.CodecContext.create('h264', 'r')
         self.init_server_connection()
 
-        self.event = EventSender(self.resolution, self.control_socket)
+        self.event = EventSender(self)
 
     def init_server_connection(self):
         """
@@ -107,7 +107,9 @@ class Client:
 
     def listen(self):
         for i in self.stream_generator():
-            self.last_frame = i
+            if i is not None:
+                self.last_frame = i
+                self.resolution = (i.shape[1], i.shape[0])
             for fun in self.listeners:
                 fun(i)
 
