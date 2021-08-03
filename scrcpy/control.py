@@ -9,7 +9,7 @@ class ControlSender:
         self.parent = parent
 
     def keycode(self, keycode: int, action: int = const.ACTION_DOWN):
-        package = struct.pack(">BBII", const.TYPE_INJECT_KEYCODE, action, keycode, 0)
+        package = struct.pack(">BBIII", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0)
         self.parent.control_socket.send(package)
 
     def touch(self, x: int, y: int, action: int = const.ACTION_DOWN):
@@ -30,7 +30,7 @@ class ControlSender:
 
     def text(self, string: str):
         buffer = string.encode("utf-8")
-        package = struct.pack(">BH", const.TYPE_INJECT_TEXT, len(buffer)) + buffer
+        package = struct.pack(">Bi", const.TYPE_INJECT_TEXT, len(buffer)) + buffer
         self.parent.control_socket.send(package)
 
     def swipe(

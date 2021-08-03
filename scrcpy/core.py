@@ -110,7 +110,7 @@ class Client:
                 "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
                 "app_process",
                 "/",
-                "com.genymobile.scrcpy.Server 1.12.1 {} {} {} true - false true".format(
+                "com.genymobile.scrcpy.Server 1.18 info {} {} {} -1 true - false true 0 false true - - false".format(
                     self.max_width, self.bitrate, self.max_fps
                 ),
             ],

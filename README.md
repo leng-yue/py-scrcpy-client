@@ -18,11 +18,11 @@ python demo.py
 Note: You need to install adb by yourself.
 
 ## Contribution & Development
-Please check scrcpy server 1.12.1 source code: [Link](https://github.com/Genymobile/scrcpy/blob/v1.12.1/server/src/main/java/com/genymobile/scrcpy/ControlMessageReader.java)
+Please check scrcpy server 1.18 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.18/server)
 
 ## TODO:
 - [x] Support all KeyCodes
-- [ ] Update scrcpy to 1.19
+- [x] Update scrcpy to 1.18
 - [ ] Add control unit test
 
 ## Reference
