@@ -9,7 +9,9 @@ class ControlSender:
         self.parent = parent
 
     def keycode(self, keycode: int, action: int = const.ACTION_DOWN):
-        package = struct.pack(">BBIII", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0)
+        package = struct.pack(
+            ">BBIII", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0
+        )
         self.parent.control_socket.send(package)
 
     def touch(self, x: int, y: int, action: int = const.ACTION_DOWN):

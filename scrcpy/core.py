@@ -117,7 +117,11 @@ class Client:
                 "app_process",
                 "/",
                 "com.genymobile.scrcpy.Server 1.18 info {} {} {} {} true - false true 0 false {} - - false".format(
-                    self.max_width, self.bitrate, self.max_fps, self.lock_screen_orientation, "true" if self.stay_awake else "false"
+                    self.max_width,
+                    self.bitrate,
+                    self.max_fps,
+                    self.lock_screen_orientation,
+                    "true" if self.stay_awake else "false",
                 ),
             ],
             cwd=server_root,
