@@ -19,7 +19,7 @@ class Client:
         max_width: int = 0,
         bitrate: int = 8000000,
         max_fps: int = 0,
-        adb_path: str = "/usr/local/bin/adb",
+        adb_path: str = "adb",
         ip: str = "127.0.0.1",
         port: int = 8081,
         flip: bool = False,
