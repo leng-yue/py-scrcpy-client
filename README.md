@@ -1,7 +1,8 @@
 # Python Scrcpy Client
 
-![pypi package](https://badge.fury.io/py/scrcpy-client.svg)
-![workflow](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+![pypi package](https://img.shields.io/pypi/v/scrcpy-client)
+![build](https://img.shields.io/github/workflow/status/leng-yue/py-scrcpy-client/CI)
+![build](https://img.shields.io/github/license/leng-yue/py-scrcpy-client)
 
 This package allows you to view and control android device in realtime. 
 
