@@ -1,7 +1,12 @@
+from typing import Optional
+
+import click
 import cv2
+from adbutils import adb
+
 import scrcpy
 
-client = scrcpy.Client(max_width=800)
+client: Optional[scrcpy.Client] = None
 
 
 def mouse_click(event, x, y, flags, param):
@@ -60,7 +65,37 @@ def on_frame(frame):
         client.control.keycode(code, scrcpy.ACTION_UP)
 
 
-if __name__ == "__main__":
+@click.command(help="A simple scrcpy client")
+@click.option(
+    "--max_width",
+    default=800,
+    show_default=True,
+    help="Set max width of the window",
+)
+@click.option(
+    "--device",
+    help="Select device manually (device serial required)",
+)
+def main(max_width: int, device: Optional[str]):
+    global client
+
+    if device:
+        device = adb.device(serial=device)
+    elif len(adb.device_list()) > 1:
+        devices = adb.device_list()
+        print(
+            "More than one device founded, please choice an android device to connect:"
+        )
+        for index, i in enumerate(devices):
+            print(f"[{index}] {i.serial}")
+        device = devices[int(input("Please type a number here:"))]
+
+    # Setup client
+    client = scrcpy.Client(max_width=max_width, device=device)
     client.add_listener(scrcpy.EVENT_INIT, on_init)
     client.add_listener(scrcpy.EVENT_FRAME, on_frame)
     client.start()
+
+
+if __name__ == "__main__":
+    main()

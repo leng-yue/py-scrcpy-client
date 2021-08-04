@@ -36,7 +36,17 @@ jobs:
         run: python script/check.py
       - name: Test and generate coverage report
         run: |
-          poetry run pytest
+          pytest --cov=./ --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage.xml
+          directory: ./coverage/reports/
+          flags: unittests
+          env_vars: OS,PYTHON
+          fail_ci_if_error: false
+          path_to_write_report: ./coverage/codecov_report.txt
+          verbose: true
   publish:
     needs: tests
     if: startsWith(github.ref, 'refs/tags/')

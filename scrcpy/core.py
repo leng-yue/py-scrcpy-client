@@ -2,10 +2,9 @@ import os
 import socket
 import struct
 from time import sleep
-from typing import Any, Callable, Generator, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import cv2
-import numpy as np
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
 from av.codec import CodecContext
 
@@ -38,7 +37,7 @@ class Client:
         """
 
         if device is None:
-            device = adb.devices()[0]
+            device = adb.device_list()[0]
         elif isinstance(device, str):
             device = adb.device(serial=device)
 

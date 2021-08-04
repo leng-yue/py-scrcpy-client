@@ -14,10 +14,10 @@ def inject(control_type: int):
 
     def wrapper(f):
         @functools.wraps(f)
-        def inner(self, *args, **kwargs):
-            package = struct.pack(">B", control_type) + f(self, *args, **kwargs)
-            if self.parent.control_socket is not None:
-                self.parent.control_socket.send(package)
+        def inner(*args, **kwargs):
+            package = struct.pack(">B", control_type) + f(*args, **kwargs)
+            if args[0].parent.control_socket is not None:
+                args[0].parent.control_socket.send(package)
             return package
 
         return inner
