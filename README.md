@@ -1,10 +1,19 @@
 # Python Scrcpy Client
-
-![pypi package](https://img.shields.io/pypi/v/scrcpy-client)
-![build](https://img.shields.io/github/workflow/status/leng-yue/py-scrcpy-client/CI)
-![license](https://img.shields.io/github/license/leng-yue/py-scrcpy-client)
-![scrcpy](https://img.shields.io/badge/scrcpy-v1.18-violet)
-![codecov](https://img.shields.io/codecov/c/github/leng-yue/py-scrcpy-client)
+<p>
+    <a href="https://pypi.org/project/scrcpy-client/">
+        <img src="https://img.shields.io/pypi/v/scrcpy-client" />
+    </a>
+    <a href="https://github.com/leng-yue/py-scrcpy-client/actions/workflows/ci.yml">
+        <img src="https://img.shields.io/github/workflow/status/leng-yue/py-scrcpy-client/CI" />
+    </a>
+    <a href="https://app.codecov.io/gh/leng-yue/py-scrcpy-client">
+        <img src="https://img.shields.io/codecov/c/github/leng-yue/py-scrcpy-client" />
+    </a>
+    <img src="https://img.shields.io/github/license/leng-yue/py-scrcpy-client" />
+    <a href="https://github.com/Genymobile/scrcpy/tree/v1.18">
+        <img src="https://img.shields.io/badge/scrcpy-v1.18-violet" />
+    </a>
+</p>
 
 This package allows you to view and control android device in realtime. 
 
