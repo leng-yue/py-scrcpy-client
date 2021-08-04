@@ -1,26 +1,62 @@
+import functools
 import struct
 from time import sleep
 
 from scrcpy import const
 
 
+def inject(control_type: int):
+    """
+    Inject control code, with this inject, we will be able to do unit test
+    :param control_type:
+    :return:
+    """
+
+    def wrapper(f):
+        @functools.wraps(f)
+        def inner(self, *args, **kwargs):
+            package = struct.pack(">B", control_type) + f(self, *args, **kwargs)
+            if self.parent.control_socket is not None:
+                self.parent.control_socket.send(package)
+            return package
+
+        return inner
+
+    return wrapper
+
+
 class ControlSender:
     def __init__(self, parent):
         self.parent = parent
 
-    def keycode(self, keycode: int, action: int = const.ACTION_DOWN) -> None:
-        package = struct.pack(
-            ">BBiii", const.TYPE_INJECT_KEYCODE, action, keycode, 0, 0
-        )
-        self.parent.control_socket.send(package)
+    @inject(const.TYPE_INJECT_KEYCODE)
+    def keycode(
+        self, keycode: int, action: int = const.ACTION_DOWN, repeat: int = 0
+    ) -> bytes:
+        """
+        Send keycode to device
+        :param keycode: const.KEYCODE_*
+        :param action: ACTION_DOWN | ACTION_UP
+        :param repeat: repeat count
+        """
+        return struct.pack(">Biii", action, keycode, repeat, 0)
 
-    def touch(self, x: int, y: int, action: int = const.ACTION_DOWN) -> None:
+    @inject(const.TYPE_INJECT_TOUCH_EVENT)
+    def touch(
+        self, x: int, y: int, action: int = const.ACTION_DOWN, touch_id: int = -1
+    ) -> bytes:
+        """
+        Touch screen
+        :param x: Position x
+        :param y: Position y
+        :param action: ACTION_DOWN | ACTION_UP | ACTION_MOVE
+        :param touch_id: Default using virtual id -1, you can specify it to emulate multi finger touch
+        """
         x, y = max(x, 0), max(y, 0)
-        package = struct.pack(
-            ">BBQiiHHHi",
-            const.TYPE_INJECT_TOUCH_EVENT,
+        return struct.pack(
+            ">BqiiHHHi",
             action,
-            0xFFFFFFFFFFFFFFFF,
+            touch_id,
             int(x),
             int(y),
             int(self.parent.resolution[0]),
@@ -28,18 +64,30 @@ class ControlSender:
             0xFFFF,
             1,
         )
-        self.parent.control_socket.send(package)
 
-    def text(self, string: str) -> None:
-        buffer = string.encode("utf-8")
-        package = struct.pack(">Bi", const.TYPE_INJECT_TEXT, len(buffer)) + buffer
-        self.parent.control_socket.send(package)
+    @inject(const.TYPE_INJECT_TEXT)
+    def text(self, text: str) -> bytes:
+        """
+        Send text to device
+        :param text:
+        """
 
-    def scroll(self, x: int, y: int, h: int, v: int) -> None:
+        buffer = text.encode("utf-8")
+        return struct.pack(">i", len(buffer)) + buffer
+
+    @inject(const.TYPE_INJECT_SCROLL_EVENT)
+    def scroll(self, x: int, y: int, h: int, v: int) -> bytes:
+        """
+        Scroll screen
+        :param x:
+        :param y:
+        :param h: horizontal movement
+        :param v: vertical movement
+        """
+
         x, y = max(x, 0), max(y, 0)
-        package = struct.pack(
-            ">BiiHHii",
-            const.TYPE_INJECT_SCROLL_EVENT,
+        return struct.pack(
+            ">iiHHii",
             int(x),
             int(y),
             int(self.parent.resolution[0]),
@@ -47,16 +95,14 @@ class ControlSender:
             int(h),
             int(v),
         )
-        self.parent.control_socket.send(package)
 
-    def back_or_turn_screen_on(self, action: int = const.ACTION_DOWN) -> None:
+    @inject(const.TYPE_BACK_OR_SCREEN_ON)
+    def back_or_turn_screen_on(self, action: int = const.ACTION_DOWN) -> bytes:
         """
         If the screen is off, it is turned on only on ACTION_DOWN
-        :param action: const.ACTION_*
+        :param action: ACTION_DOWN | ACTION_UP
         """
-
-        package = struct.pack(">BB", const.TYPE_BACK_OR_SCREEN_ON, action)
-        self.parent.control_socket.send(package)
+        return struct.pack(">B", action)
 
     def swipe(
         self,

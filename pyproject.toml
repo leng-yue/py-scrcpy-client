@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrcpy-client"
-version = "0.1.2"
+version = "0.2.0"
 description = "A client of scrcpy"
 authors = ["lengyue <lengyue@lengyue.me>"]
 readme = "README.md"
@@ -14,11 +14,13 @@ packages = [
 python = "^3.7"
 av = "^8.0.3"
 opencv-python = "^4.5.3"
+adbutils = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.9.2"
 isort = "^5.9.3"
 black = "^21.7b0"
+pytest = "^6.2.4"
 
 [tool.isort]
 profile = "black"

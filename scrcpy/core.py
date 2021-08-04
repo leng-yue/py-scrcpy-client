@@ -6,7 +6,7 @@ from typing import Any, Callable, Generator, Optional, Union
 
 import cv2
 import numpy as np
-from adbutils import adb, AdbDevice, Network, AdbError, _AdbStreamConnection
+from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
 from av.codec import CodecContext
 
 from .const import EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
@@ -73,7 +73,9 @@ class Client:
         """
         for _ in range(30):
             try:
-                self.video_socket = self.device.create_connection(Network.LOCAL_ABSTRACT, "scrcpy")
+                self.video_socket = self.device.create_connection(
+                    Network.LOCAL_ABSTRACT, "scrcpy"
+                )
                 break
             except AdbError:
                 sleep(0.1)
@@ -85,7 +87,9 @@ class Client:
         if not len(dummy_byte):
             raise ConnectionError("Did not receive Dummy Byte!")
 
-        self.control_socket = self.device.create_connection(Network.LOCAL_ABSTRACT, "scrcpy")
+        self.control_socket = self.device.create_connection(
+            Network.LOCAL_ABSTRACT, "scrcpy"
+        )
         self.device_name = self.video_socket.recv(64).decode("utf-8")
         if not len(self.device_name):
             raise ConnectionError("Did not receive Device Name!")
@@ -127,16 +131,6 @@ class Client:
             stream=True,
         )
 
-    def __frame_loop(self):
-        # Frame loop
-        for i in self.__stream_generator():
-            if not self.alive:
-                break
-            if i is not None:
-                self.last_frame = i
-                self.resolution = (i.shape[1], i.shape[0])
-            self.__send_to_listeners(EVENT_FRAME, i)
-
     def start(self) -> None:
         """
         Start listening video stream
@@ -145,10 +139,7 @@ class Client:
         self.init_server_connection()
         self.__send_to_listeners(EVENT_INIT)
         self.alive = True
-        try:
-            self.__frame_loop()
-        except OSError:  # Socket Closed
-            pass
+        self.__stream_loop()
 
     def stop(self) -> None:
         self.alive = False
@@ -158,16 +149,11 @@ class Client:
             self.server_stream.close()
         if self.video_socket is not None:
             self.video_socket.close()
-        # print("Stopped")
 
-    def __stream_generator(self) -> Generator[Optional[np.ndarray], None, None]:
-        """
-        Parsing h264 stream to frames
-        :return: frames
-        """
+    def __stream_loop(self):
         codec = CodecContext.create("h264", "r")
 
-        while True:
+        while self.alive:
             try:
                 raw_h264 = self.video_socket.recv(0x10000)
                 packets = codec.parse(raw_h264)
@@ -177,10 +163,15 @@ class Client:
                         frame = frame.to_ndarray(format="bgr24")
                         if self.flip:
                             frame = cv2.flip(frame, 1)
-                        yield frame
+                        self.last_frame = frame
+                        self.resolution = (frame.shape[1], frame.shape[0])
+                        self.__send_to_listeners(EVENT_FRAME, frame)
             except BlockingIOError:
                 if not self.block_frame:
-                    yield None
+                    self.__send_to_listeners(EVENT_FRAME, None)
+            except OSError as e:  # Socket Closed
+                if self.alive:
+                    raise e
 
     def add_listener(self, cls: str, listener: Callable[..., Any]) -> None:
         """
