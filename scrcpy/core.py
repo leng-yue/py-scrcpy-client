@@ -136,8 +136,8 @@ class Client:
         """
         self.deploy_server()
         self.init_server_connection()
-        self.__send_to_listeners(EVENT_INIT)
         self.alive = True
+        self.__send_to_listeners(EVENT_INIT)
         self.__stream_loop()
 
     def stop(self) -> None:
