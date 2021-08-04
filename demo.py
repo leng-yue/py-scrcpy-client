@@ -1,7 +1,7 @@
 import cv2
 import scrcpy
 
-client = scrcpy.Client(adb_path="adb/adb.exe", max_width=800)
+client = scrcpy.Client(max_width=800)
 
 
 def mouse_click(event, x, y, flags, param):

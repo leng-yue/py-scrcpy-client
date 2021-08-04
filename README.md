@@ -18,7 +18,6 @@ Then, you can start `demo.py`:
 ```shell
 python demo.py
 ```
-Note: You need to install adb by yourself.
 
 ## Contribution & Development
 Please check scrcpy server 1.18 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.18/server)
