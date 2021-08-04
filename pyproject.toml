@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrcpy-client"
-version = "0.2.1"
+version = "0.2.2"
 description = "A client of scrcpy"
 authors = ["lengyue <lengyue@lengyue.me>"]
 readme = "README.md"
@@ -11,7 +11,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-scrcpy = "script.demo:main"
+py-scrcpy = "scrcpy.ui:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"

@@ -24,10 +24,10 @@ To begin with, you need to install this package via pip:
 ```shell
 pip install scrcpy-client
 ```
-Then, you can start `script/demo.py`:
+Then, you can start `script/ui.py`:
 ```shell
-python -m scrcpy
-// or python script/demo.py
+py-scrcpy
+// or python script/ui.py
 ```
 
 ## Contribution & Development
