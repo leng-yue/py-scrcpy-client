@@ -4,8 +4,8 @@ from scrcpy import Client
 
 
 class FakeStream:
-    def __init__(self, data: list[Optional[bytes]]):
-        self.data: list[Optional[bytes]] = data
+    def __init__(self, data):
+        self.data = data
         self.die = False
 
     def recv(self, a):
