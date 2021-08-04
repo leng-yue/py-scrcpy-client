@@ -1,16 +1,16 @@
 # Python Scrcpy Client
 <p>
-    <a href="https://pypi.org/project/scrcpy-client/">
+    <a href="https://pypi.org/project/scrcpy-client/" target="_blank">
         <img src="https://img.shields.io/pypi/v/scrcpy-client" />
     </a>
-    <a href="https://github.com/leng-yue/py-scrcpy-client/actions/workflows/ci.yml">
+    <a href="https://github.com/leng-yue/py-scrcpy-client/actions/workflows/ci.yml" target="_blank">
         <img src="https://img.shields.io/github/workflow/status/leng-yue/py-scrcpy-client/CI" />
     </a>
-    <a href="https://app.codecov.io/gh/leng-yue/py-scrcpy-client">
+    <a href="https://app.codecov.io/gh/leng-yue/py-scrcpy-client" target="_blank">
         <img src="https://img.shields.io/codecov/c/github/leng-yue/py-scrcpy-client" />
     </a>
     <img src="https://img.shields.io/github/license/leng-yue/py-scrcpy-client" />
-    <a href="https://github.com/Genymobile/scrcpy/tree/v1.18">
+    <a href="https://github.com/Genymobile/scrcpy/tree/v1.18" target="_blank">
         <img src="https://img.shields.io/badge/scrcpy-v1.18-violet" />
     </a>
 </p>
