@@ -46,6 +46,7 @@ def test_init_listener():
     def init():
         assert client.device_name == "test"
         client.stop()
+
     client = Client(device=FakeADBDevice())
 
     client.add_listener("init", init)
