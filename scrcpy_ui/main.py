@@ -4,7 +4,7 @@ import click
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow
-from ui_main import Ui_MainWindow
+from .ui_main import Ui_MainWindow
 
 import scrcpy
 
