@@ -24,13 +24,13 @@ To begin with, you need to install this package via pip:
 ```shell
 pip install scrcpy-client[ui]
 ```
-Then, you can start `script/ui.py`:
+Then, you can start `scrcpy_ui/main.py` to view the demo:
 ```shell
 py-scrcpy
 // or python scrcpy_ui/main.py
 ```
 
-Notice: you can ignore `[ui]` if you don't want to use the demo ui
+Note: you can ignore `[ui]` if you don't want to view the demo ui
 
 ## Contribution & Development
 Please check scrcpy server 1.18 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.18/server)
