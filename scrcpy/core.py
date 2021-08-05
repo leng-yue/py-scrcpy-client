@@ -65,6 +65,7 @@ class Client:
         self.server_stream: Optional[_AdbStreamConnection] = None
         self.video_socket: Optional[socket.socket] = None
         self.control_socket: Optional[socket.socket] = None
+        self.control_socket_lock = threading.Lock()
 
     def init_server_connection(self):
         """

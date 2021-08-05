@@ -1,7 +1,9 @@
 import functools
+import socket
 import struct
 from time import sleep
 
+import scrcpy
 from scrcpy import const
 
 
@@ -17,7 +19,8 @@ def inject(control_type: int):
         def inner(*args, **kwargs):
             package = struct.pack(">B", control_type) + f(*args, **kwargs)
             if args[0].parent.control_socket is not None:
-                args[0].parent.control_socket.send(package)
+                with args[0].parent.control_socket_lock:
+                    args[0].parent.control_socket.send(package)
             return package
 
         return inner
@@ -40,6 +43,16 @@ class ControlSender:
         :param repeat: repeat count
         """
         return struct.pack(">Biii", action, keycode, repeat, 0)
+
+    @inject(const.TYPE_INJECT_TEXT)
+    def text(self, text: str) -> bytes:
+        """
+        Send text to device
+        :param text:
+        """
+
+        buffer = text.encode("utf-8")
+        return struct.pack(">i", len(buffer)) + buffer
 
     @inject(const.TYPE_INJECT_TOUCH_EVENT)
     def touch(
@@ -64,16 +77,6 @@ class ControlSender:
             0xFFFF,
             1,
         )
-
-    @inject(const.TYPE_INJECT_TEXT)
-    def text(self, text: str) -> bytes:
-        """
-        Send text to device
-        :param text:
-        """
-
-        buffer = text.encode("utf-8")
-        return struct.pack(">i", len(buffer)) + buffer
 
     @inject(const.TYPE_INJECT_SCROLL_EVENT)
     def scroll(self, x: int, y: int, h: int, v: int) -> bytes:
@@ -104,6 +107,78 @@ class ControlSender:
         """
         return struct.pack(">B", action)
 
+    @inject(const.TYPE_EXPAND_NOTIFICATION_PANEL)
+    def expand_notification_panel(self) -> bytes:
+        """
+        Expand notification panel
+        """
+        return b""
+
+    @inject(const.TYPE_EXPAND_SETTINGS_PANEL)
+    def expand_settings_panel(self) -> bytes:
+        """
+        Expand settings panel
+        """
+        return b""
+
+    @inject(const.TYPE_COLLAPSE_PANELS)
+    def collapse_panels(self) -> bytes:
+        """
+        Collapse all panels
+        """
+        return b""
+
+    def get_clipboard(self) -> str:
+        """
+        Get clipboard
+        """
+        # Since this function need socket response, we can't auto inject it any more
+        s: socket.socket = self.parent.control_socket
+
+        with self.parent.control_socket_lock:
+            # Flush socket
+            s.setblocking(False)
+            while True:
+                try:
+                    s.recv(1024)
+                except BlockingIOError:
+                    break
+            s.setblocking(True)
+
+            # Read package
+            package = struct.pack(">B", const.TYPE_GET_CLIPBOARD)
+            s.send(package)
+            (code,) = struct.unpack(">B", s.recv(1))
+            assert code == 0
+            (length,) = struct.unpack(">i", s.recv(4))
+
+            return s.recv(length).decode("utf-8")
+
+    @inject(const.TYPE_SET_CLIPBOARD)
+    def set_clipboard(self, text: str, paste: bool = False) -> bytes:
+        """
+        Set clipboard
+        :param text: the string you want to set
+        :param paste: paste now
+        """
+        buffer = text.encode("utf-8")
+        return struct.pack(">?i", paste, len(buffer)) + buffer
+
+    @inject(const.TYPE_SET_SCREEN_POWER_MODE)
+    def set_screen_power_mode(self, mode: int = scrcpy.POWER_MODE_NORMAL) -> bytes:
+        """
+        Set screen power mode
+        :param mode: POWER_MODE_OFF | POWER_MODE_NORMAL
+        """
+        return struct.pack(">b", mode)
+
+    @inject(const.TYPE_ROTATE_DEVICE)
+    def rotate_device(self) -> bytes:
+        """
+        Rotate device
+        """
+        return b""
+
     def swipe(
         self,
         start_x: int,
@@ -113,6 +188,17 @@ class ControlSender:
         move_step_length: int = 5,
         move_steps_delay: float = 0.005,
     ) -> None:
+        """
+        Swipe on screen
+        :param start_x:
+        :param start_y:
+        :param end_x:
+        :param end_y:
+        :param move_step_length:
+        :param move_steps_delay:
+        :return:
+        """
+
         self.touch(start_x, start_y, const.ACTION_DOWN)
         next_x = start_x
         next_y = start_y
