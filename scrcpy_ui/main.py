@@ -26,7 +26,9 @@ class MainWindow(QMainWindow):
         self.alive = True
 
         # Setup client
-        self.client = scrcpy.Client(max_width=max_width, device=self.device, flip=self.ui.flip.isChecked())
+        self.client = scrcpy.Client(
+            max_width=max_width, device=self.device, flip=self.ui.flip.isChecked()
+        )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
 
