@@ -35,7 +35,6 @@ class MainWindow(QMainWindow):
         # Bind controllers
         self.ui.button_home.clicked.connect(self.on_click_home)
         self.ui.button_back.clicked.connect(self.on_click_back)
-        self.ui.button_stop.clicked.connect(self.on_click_stop)
 
         # Bind config
         self.ui.combo_device.currentTextChanged.connect(self.choose_device)
@@ -80,10 +79,6 @@ class MainWindow(QMainWindow):
     def on_click_back(self):
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_DOWN)
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_UP)
-
-    def on_click_stop(self):
-        self.alive = False
-        self.client.stop()
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):

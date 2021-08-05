@@ -89,11 +89,6 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.button_back)
 
-        self.button_stop = QPushButton(self.centralwidget)
-        self.button_stop.setObjectName(u"button_stop")
-
-        self.horizontalLayout.addWidget(self.button_stop)
-
         self.horizontalSpacer_2 = QSpacerItem(
             40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
         )
@@ -132,9 +127,6 @@ class Ui_MainWindow(object):
         )
         self.button_back.setText(
             QCoreApplication.translate("MainWindow", u"BACK", None)
-        )
-        self.button_stop.setText(
-            QCoreApplication.translate("MainWindow", u"STOP", None)
         )
 
     # retranslateUi

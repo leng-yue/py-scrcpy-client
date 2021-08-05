@@ -95,7 +95,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0">
         <property name="spacing">
          <number>6</number>
         </property>
@@ -126,13 +126,6 @@
          <widget class="QPushButton" name="button_back">
           <property name="text">
            <string>BACK</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_stop">
-          <property name="text">
-           <string>STOP</string>
           </property>
          </widget>
         </item>
