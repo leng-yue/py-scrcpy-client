@@ -116,6 +116,10 @@ def test_set_screen_power_mode():
     )
 
 
+def rotate_device():
+    assert control.rotate_device() == b"\x0b"  # TYPE_ROTATE_DEVICE
+
+
 def test_swipe():
     control.swipe(100, 200, 300, 400)
     control.swipe(100, 200, 2000, 2000)
