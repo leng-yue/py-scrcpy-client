@@ -1,6 +1,7 @@
 import os
 import socket
 import struct
+import threading
 from time import sleep
 from typing import Any, Callable, Optional, Union
 
@@ -130,15 +131,20 @@ class Client:
             stream=True,
         )
 
-    def start(self) -> None:
+    def start(self, threaded: bool = False) -> None:
         """
         Start listening video stream
+        :param threaded: Run stream loop in a different thread to avoid blocking
         """
         self.deploy_server()
         self.init_server_connection()
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
-        self.__stream_loop()
+
+        if threaded:
+            threading.Thread(target=self.__stream_loop).start()
+        else:
+            self.__stream_loop()
 
     def stop(self) -> None:
         self.alive = False
@@ -151,7 +157,6 @@ class Client:
 
     def __stream_loop(self):
         codec = CodecContext.create("h264", "r")
-
         while self.alive:
             try:
                 raw_h264 = self.video_socket.recv(0x10000)

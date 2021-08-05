@@ -25,6 +25,35 @@ class Ui_MainWindow(object):
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setSizeConstraint(QLayout.SetFixedSize)
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_3)
+
+        self.label_2 = QLabel(self.centralwidget)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout_4.addWidget(self.label_2)
+
+        self.combo_device = QComboBox(self.centralwidget)
+        self.combo_device.setObjectName(u"combo_device")
+        self.combo_device.setMinimumSize(QSize(100, 0))
+
+        self.horizontalLayout_4.addWidget(self.combo_device)
+
+        self.flip = QCheckBox(self.centralwidget)
+        self.flip.setObjectName(u"flip")
+
+        self.horizontalLayout_4.addWidget(self.flip)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_4)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setSizeConstraint(QLayout.SetFixedSize)
@@ -35,15 +64,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.label)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setSizeConstraint(QLayout.SetFixedSize)
-        self.horizontalSpacer = QSpacerItem(
-            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
-        )
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
@@ -62,15 +90,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.button_stop)
 
-        self.horizontalSpacer_2 = QSpacerItem(
-            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
-        )
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
+
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.verticalLayout.setStretch(0, 100)
+        self.verticalLayout.setStretch(1, 100)
 
         self.horizontalLayout_3.addLayout(self.verticalLayout)
 
@@ -79,22 +106,15 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         QMetaObject.connectSlotsByName(MainWindow)
-
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(
-            QCoreApplication.translate("MainWindow", u"MainWindow", None)
-        )
-        self.label.setText(QCoreApplication.translate("MainWindow", u"ImageBox", None))
-        self.button_home.setText(
-            QCoreApplication.translate("MainWindow", u"HOME", None)
-        )
-        self.button_back.setText(
-            QCoreApplication.translate("MainWindow", u"BACK", None)
-        )
-        self.button_stop.setText(
-            QCoreApplication.translate("MainWindow", u"STOP", None)
-        )
-
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Device", None))
+        self.flip.setText(QCoreApplication.translate("MainWindow", u"Flip", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:20pt;\">Loading</span></p></body></html>", None))
+        self.button_home.setText(QCoreApplication.translate("MainWindow", u"HOME", None))
+        self.button_back.setText(QCoreApplication.translate("MainWindow", u"BACK", None))
+        self.button_stop.setText(QCoreApplication.translate("MainWindow", u"STOP", None))
     # retranslateUi
+

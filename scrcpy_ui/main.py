@@ -3,7 +3,7 @@ from typing import Optional
 import click
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import scrcpy
 
@@ -13,31 +13,31 @@ app = QApplication([])
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, max_width, device):
+    def __init__(self, max_width: Optional[int], serial: Optional[str] = None):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        if device:
-            device = adb.device(serial=device)
-        elif len(adb.device_list()) > 1:
-            devices = adb.device_list()
-            print(
-                "More than one device founded, please choice an android device to connect:"
-            )
-            for index, i in enumerate(devices):
-                print(f"[{index}] {i.serial}")
-            device = devices[int(input("Please type a number here: "))]
+        # Setup devices
+        self.devices = self.list_devices()
+        if serial:
+            self.choose_device(serial)
+        self.device = adb.device(serial=self.ui.combo_device.currentText())
+        self.alive = True
 
         # Setup client
-        self.client = scrcpy.Client(max_width=max_width, device=device)
+        self.client = scrcpy.Client(max_width=max_width, device=self.device, flip=self.ui.flip.isChecked())
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
 
-        # Bind buttons
+        # Bind controllers
         self.ui.button_home.clicked.connect(self.on_click_home)
         self.ui.button_back.clicked.connect(self.on_click_back)
         self.ui.button_stop.clicked.connect(self.on_click_stop)
+
+        # Bind config
+        self.ui.combo_device.currentTextChanged.connect(self.choose_device)
+        self.ui.flip.stateChanged.connect(self.on_flip)
 
         # Bind mouse event
         self.ui.label.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
@@ -48,6 +48,29 @@ class MainWindow(QMainWindow):
         self.keyPressEvent = self.on_key_event(scrcpy.ACTION_DOWN)
         self.keyReleaseEvent = self.on_key_event(scrcpy.ACTION_UP)
 
+    def choose_device(self, device):
+        if device not in self.devices:
+            msgBox = QMessageBox()
+            msgBox.setText(f"Device serial [{device}] not found!")
+            msgBox.exec()
+            return
+
+        # Ensure text
+        self.ui.combo_device.setCurrentText(device)
+        # Restart service
+        if getattr(self, "client", None):
+            self.client.stop()
+            self.client.device = adb.device(serial=device)
+
+    def list_devices(self):
+        self.ui.combo_device.clear()
+        items = [i.serial for i in adb.device_list()]
+        self.ui.combo_device.addItems(items)
+        return items
+
+    def on_flip(self, _):
+        self.client.flip = self.ui.flip.isChecked()
+
     def on_click_home(self):
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
@@ -57,6 +80,7 @@ class MainWindow(QMainWindow):
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_UP)
 
     def on_click_stop(self):
+        self.alive = False
         self.client.stop()
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
@@ -106,7 +130,6 @@ class MainWindow(QMainWindow):
 
     def on_frame(self, frame):
         app.processEvents()
-
         if frame is not None:
             image = QImage(
                 frame,
@@ -118,6 +141,10 @@ class MainWindow(QMainWindow):
             pix = QPixmap(image)
             self.ui.label.setPixmap(pix)
             self.resize(*self.client.resolution)
+
+    def closeEvent(self, _):
+        self.client.stop()
+        self.alive = False
 
 
 @click.command(help="A simple scrcpy client")
@@ -134,7 +161,10 @@ class MainWindow(QMainWindow):
 def main(max_width: int, device: Optional[str]):
     m = MainWindow(max_width, device)
     m.show()
+
     m.client.start()
+    while m.alive:
+        m.client.start()
 
 
 if __name__ == "__main__":
