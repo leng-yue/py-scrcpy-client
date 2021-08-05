@@ -22,13 +22,15 @@ This package allows you to view and control android device in realtime.
 ## How to use
 To begin with, you need to install this package via pip:
 ```shell
-pip install scrcpy-client
+pip install scrcpy-client[ui]
 ```
 Then, you can start `script/ui.py`:
 ```shell
 py-scrcpy
-// or python script/ui.py
+// or python scrcpy_ui/main.py
 ```
+
+Notice: you can ignore `[ui]` if you don't want to use the demo ui
 
 ## Contribution & Development
 Please check scrcpy server 1.18 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.18/server)

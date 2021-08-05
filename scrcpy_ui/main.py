@@ -1,14 +1,15 @@
 from typing import Optional
 
 import click
-from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QKeyEvent
-from PySide6.QtWidgets import QMainWindow, QApplication
 from adbutils import adb
+from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
+from PySide6.QtWidgets import QApplication, QMainWindow
 
 import scrcpy
 
 app = QApplication([])
 from ui_main import Ui_MainWindow
+
 
 class MainWindow(QMainWindow):
     def __init__(self, max_width, device):
@@ -60,6 +61,7 @@ class MainWindow(QMainWindow):
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
             self.client.control.touch(evt.position().x(), evt.position().y(), action)
+
         return handler
 
     def on_key_event(self, action=scrcpy.ACTION_DOWN):
@@ -67,6 +69,7 @@ class MainWindow(QMainWindow):
             code = self.map_code(evt.key())
             if code != -1:
                 self.client.control.keycode(code, action)
+
         return handler
 
     # Mapping numbers, english chars, some other operations
@@ -82,7 +85,6 @@ class MainWindow(QMainWindow):
 
         hard_code = {
             32: scrcpy.KEYCODE_SPACE,
-
             16777219: scrcpy.KEYCODE_DEL,
             16777248: scrcpy.KEYCODE_SHIFT_LEFT,
             16777220: scrcpy.KEYCODE_ENTER,
@@ -104,7 +106,13 @@ class MainWindow(QMainWindow):
         app.processEvents()
 
         if frame is not None:
-            image = QImage(frame, frame.shape[1], frame.shape[0], frame.shape[1] * 3, QImage.Format_BGR888)
+            image = QImage(
+                frame,
+                frame.shape[1],
+                frame.shape[0],
+                frame.shape[1] * 3,
+                QImage.Format_BGR888,
+            )
             pix = QPixmap(image)
             self.ui.label.setPixmap(pix)
             self.resize(*self.client.resolution)

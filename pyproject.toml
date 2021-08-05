@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrcpy-client"
-version = "0.2.2"
+version = "0.2.3"
 description = "A client of scrcpy"
 authors = ["lengyue <lengyue@lengyue.me>"]
 readme = "README.md"
@@ -18,8 +18,13 @@ python = ">=3.7,<3.10"
 av = "^8.0.3"
 opencv-python = "^4.5.3"
 adbutils = "^0.11.0"
-click = "^8.0.1"
-PySide6 = "^6.1.2"
+
+# Optional dependencies for ui
+click = { version = "^8.0.1", optional = true }
+PySide6 = { version = "^6.1.2", optional = true }
+
+[tool.poetry.extras]
+ui = ["click", "PySide6"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
