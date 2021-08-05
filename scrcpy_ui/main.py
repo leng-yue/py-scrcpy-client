@@ -61,6 +61,9 @@ class MainWindow(QMainWindow):
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
+            focused_widget = QApplication.focusWidget()
+            if focused_widget is not None:
+                focused_widget.clearFocus()
             self.client.control.touch(evt.position().x(), evt.position().y(), action)
 
         return handler
@@ -94,16 +97,14 @@ class MainWindow(QMainWindow):
         }
         if code in hard_code:
             return hard_code[code]
-        print(code)
+
+        print(f"Unknown keycode: {code}")
         return -1
 
     def on_init(self):
         self.setWindowTitle(f"Serial: {self.client.device_name}")
 
     def on_frame(self, frame):
-        focused_widget = QApplication.focusWidget()
-        if focused_widget is not None:
-            focused_widget.clearFocus()
         app.processEvents()
 
         if frame is not None:
