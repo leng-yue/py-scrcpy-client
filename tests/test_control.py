@@ -1,3 +1,5 @@
+import threading
+
 import scrcpy
 from scrcpy.control import ControlSender
 
@@ -55,7 +57,62 @@ def test_control_scroll():
 
 def test_back_or_turn_screen_on():
     assert control.back_or_turn_screen_on() == (
-        b"\x04" + b"\x00"  # TYPE_BACK_OR_SCREEN_ON  # ACTION_DOWN
+        b"\x04" + b"\x00"  # TYPE_BACK_OR_SCREEN_ON, ACTION_DOWN
+    )
+
+
+def test_panels():
+    assert control.expand_notification_panel() == b"\x05"
+    assert control.expand_settings_panel() == b"\x06"
+    assert control.collapse_panels() == b"\x07"
+
+
+def test_get_clipboard():
+    class MockClipboardParent:
+        class MockSocket:
+            @staticmethod
+            def setblocking(_):
+                pass
+
+            @staticmethod
+            def send(_):
+                pass
+
+            @staticmethod
+            def recv(b):
+                if b == 1024:
+                    raise BlockingIOError()
+                elif b == 1:
+                    return b"\x00"
+                elif b == 4:
+                    return b"\x00\x00\x00\x05"
+                return b"test0"
+
+        control_socket = MockSocket()
+        control_socket_lock = threading.Lock()
+
+    assert ControlSender(MockClipboardParent()).get_clipboard() == "test0"
+
+
+def test_set_clipboard():
+    text = "hello, world"
+    assert control.set_clipboard(text, False) == (
+        b"\x09"  # TYPE_SET_CLIPBOARD
+        + b"\x00"  # Paste: false
+        + b"\x00\x00\x00\x0c"  # Length: 12
+        + text.encode("utf-8")
+    )
+    assert control.set_clipboard(text, True) == (
+        b"\x09"  # TYPE_SET_CLIPBOARD
+        + b"\x01"  # Paste: true
+        + b"\x00\x00\x00\x0c"  # Length: 12
+        + text.encode("utf-8")
+    )
+
+
+def test_set_screen_power_mode():
+    assert control.set_screen_power_mode(scrcpy.POWER_MODE_NORMAL) == (
+        b"\x0a" + b"\x02"  # TYPE_SET_SCREEN_POWER_MODE, POWER_MODE_NORMAL
     )
 
 
