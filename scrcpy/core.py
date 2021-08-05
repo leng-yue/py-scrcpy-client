@@ -89,7 +89,7 @@ class Client:
         self.control_socket = self.device.create_connection(
             Network.LOCAL_ABSTRACT, "scrcpy"
         )
-        self.device_name = self.video_socket.recv(64).decode("utf-8")
+        self.device_name = self.video_socket.recv(64).decode("utf-8").rstrip('\x00')
         if not len(self.device_name):
             raise ConnectionError("Did not receive Device Name!")
 

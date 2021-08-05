@@ -11,14 +11,15 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-py-scrcpy = "scrcpy.ui:main"
+py-scrcpy = "scrcpy_ui:main"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7,<3.10"
 av = "^8.0.3"
 opencv-python = "^4.5.3"
 adbutils = "^0.11.0"
 click = "^8.0.1"
+PySide6 = "^6.1.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
