@@ -8,6 +8,7 @@ repository = "https://github.com/leng-yue/py-scrcpy-client"
 license = "MIT"
 packages = [
     { include = "scrcpy" },
+    { include = "scrcpy_ui" },
 ]
 
 [tool.poetry.scripts]
