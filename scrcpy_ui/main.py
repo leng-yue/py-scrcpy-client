@@ -97,8 +97,13 @@ class MainWindow(QMainWindow):
 
         return handler
 
-    # Mapping numbers, english chars, some other operations
     def map_code(self, code):
+        """
+        Map qt keycode ti android keycode
+        :param code: qt keycode
+        :return: android keycode, -1 if not founded
+        """
+
         if code == -1:
             return -1
         if 48 <= code <= 57:
