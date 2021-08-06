@@ -79,12 +79,13 @@ jobs:
           python-version: 3.9
       - name: Install dependencies
         run: |
+          apt-get install python3-sphinx
           python -m pip install --upgrade pip poetry
           poetry config virtualenvs.create false --local
           poetry install
-      - uses: ammaraskar/sphinx-action@master
-        with:
-          docs-folder: "docs/"
+      - name: Build docs
+        working-directory: docs/
+        run: make html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
