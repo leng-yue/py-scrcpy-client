@@ -50,7 +50,7 @@ Then, you can start the client
 ```python
 client.start()
 ```
-[Optional] you can use start the client with `threaded=True`, then the frame loop will be executed in a new thread, 
+[Optional] you can start the client with `threaded=True`, then the frame loop will be executed in a new thread, 
 and the main thread won't be blocked.
 ```python
 client.start(threaded=True)
