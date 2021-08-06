@@ -12,8 +12,8 @@
 #
 import os
 import sys
+sys.path.insert(0, '../')
 import scrcpy
-sys.path.insert(0, 'G:\\scrcpy-client')
 
 
 # -- Project information -----------------------------------------------------
