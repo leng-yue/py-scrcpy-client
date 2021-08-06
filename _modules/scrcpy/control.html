@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scrcpy.control &#8212; Python Scrcpy Client  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scrcpy.control</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+
+<span class="kn">import</span> <span class="nn">scrcpy</span>
+<span class="kn">from</span> <span class="nn">scrcpy</span> <span class="kn">import</span> <span class="n">const</span>
+
+
+<div class="viewcode-block" id="inject"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.inject">[docs]</a><span class="k">def</span> <span class="nf">inject</span><span class="p">(</span><span class="n">control_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inject control code, with this inject, we will be able to do unit test</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        control_type: event to senf, TYPE_*</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">package</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;B&quot;</span><span class="p">,</span> <span class="n">control_type</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">control_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">control_socket_lock</span><span class="p">:</span>
+                    <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">control_socket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">package</span>
+
+        <span class="k">return</span> <span class="n">inner</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="ControlSender"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender">[docs]</a><span class="k">class</span> <span class="nc">ControlSender</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+<div class="viewcode-block" id="ControlSender.keycode"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.keycode">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_KEYCODE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">keycode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">keycode</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">repeat</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send keycode to device</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            keycode: const.KEYCODE_*</span>
+<span class="sd">            action: ACTION_DOWN | ACTION_UP</span>
+<span class="sd">            repeat: repeat count</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;Biii&quot;</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">keycode</span><span class="p">,</span> <span class="n">repeat</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.text"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.text">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_TEXT</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send text to device</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text: text to send</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;i&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">))</span> <span class="o">+</span> <span class="n">buffer</span></div>
+
+<div class="viewcode-block" id="ControlSender.touch"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.touch">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_TOUCH_EVENT</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">touch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">touch_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Touch screen</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: horizontal position</span>
+<span class="sd">            y: vertical position</span>
+<span class="sd">            action: ACTION_DOWN | ACTION_UP | ACTION_MOVE</span>
+<span class="sd">            touch_id: Default using virtual id -1, you can specify it to emulate multi finger touch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
+            <span class="s2">&quot;&gt;BqiiHHHi&quot;</span><span class="p">,</span>
+            <span class="n">action</span><span class="p">,</span>
+            <span class="n">touch_id</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="mh">0xFFFF</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.scroll"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.scroll">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_SCROLL_EVENT</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">scroll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scroll screen</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: horizontal position</span>
+<span class="sd">            y: vertical position</span>
+<span class="sd">            h: horizontal movement</span>
+<span class="sd">            v: vertical movement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
+            <span class="s2">&quot;&gt;iiHHii&quot;</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.back_or_turn_screen_on"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.back_or_turn_screen_on">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_BACK_OR_SCREEN_ON</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">back_or_turn_screen_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If the screen is off, it is turned on only on ACTION_DOWN</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            action: ACTION_DOWN | ACTION_UP</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;B&quot;</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.expand_notification_panel"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.expand_notification_panel">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_EXPAND_NOTIFICATION_PANEL</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">expand_notification_panel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Expand notification panel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ControlSender.expand_settings_panel"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.expand_settings_panel">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_EXPAND_SETTINGS_PANEL</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">expand_settings_panel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Expand settings panel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ControlSender.collapse_panels"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.collapse_panels">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_COLLAPSE_PANELS</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">collapse_panels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collapse all panels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ControlSender.get_clipboard"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.get_clipboard">[docs]</a>    <span class="k">def</span> <span class="nf">get_clipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get clipboard</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Since this function need socket response, we can&#39;t auto inject it any more</span>
+        <span class="n">s</span><span class="p">:</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">control_socket</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">control_socket_lock</span><span class="p">:</span>
+            <span class="c1"># Flush socket</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Read package</span>
+            <span class="n">package</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;B&quot;</span><span class="p">,</span> <span class="n">const</span><span class="o">.</span><span class="n">TYPE_GET_CLIPBOARD</span><span class="p">)</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">code</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;B&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">assert</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="p">(</span><span class="n">length</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;i&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">length</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.set_clipboard"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.set_clipboard">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_SET_CLIPBOARD</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">set_clipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">paste</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set clipboard</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text: the string you want to set</span>
+<span class="sd">            paste: paste now</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;?i&quot;</span><span class="p">,</span> <span class="n">paste</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">))</span> <span class="o">+</span> <span class="n">buffer</span></div>
+
+<div class="viewcode-block" id="ControlSender.set_screen_power_mode"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.set_screen_power_mode">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_SET_SCREEN_POWER_MODE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">set_screen_power_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">POWER_MODE_NORMAL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set screen power mode</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mode: POWER_MODE_OFF | POWER_MODE_NORMAL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;b&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ControlSender.rotate_device"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.rotate_device">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_ROTATE_DEVICE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">rotate_device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rotate device</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ControlSender.swipe"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.swipe">[docs]</a>    <span class="k">def</span> <span class="nf">swipe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">start_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">start_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">end_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">end_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">move_step_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">move_steps_delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.005</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Swipe on screen</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            start_x: start horizontal position</span>
+<span class="sd">            start_y: start vertical position</span>
+<span class="sd">            end_x: start horizontal position</span>
+<span class="sd">            end_y: end vertical position</span>
+<span class="sd">            move_step_length: length per step</span>
+<span class="sd">            move_steps_delay: sleep seconds after each step</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="n">start_x</span><span class="p">,</span> <span class="n">start_y</span><span class="p">,</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span>
+        <span class="n">next_x</span> <span class="o">=</span> <span class="n">start_x</span>
+        <span class="n">next_y</span> <span class="o">=</span> <span class="n">start_y</span>
+
+        <span class="k">if</span> <span class="n">end_x</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">end_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">end_y</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">end_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">decrease_x</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">start_x</span> <span class="o">&gt;</span> <span class="n">end_x</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">decrease_y</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">start_y</span> <span class="o">&gt;</span> <span class="n">end_y</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">decrease_x</span><span class="p">:</span>
+                <span class="n">next_x</span> <span class="o">-=</span> <span class="n">move_step_length</span>
+                <span class="k">if</span> <span class="n">next_x</span> <span class="o">&lt;</span> <span class="n">end_x</span><span class="p">:</span>
+                    <span class="n">next_x</span> <span class="o">=</span> <span class="n">end_x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">next_x</span> <span class="o">+=</span> <span class="n">move_step_length</span>
+                <span class="k">if</span> <span class="n">next_x</span> <span class="o">&gt;</span> <span class="n">end_x</span><span class="p">:</span>
+                    <span class="n">next_x</span> <span class="o">=</span> <span class="n">end_x</span>
+
+            <span class="k">if</span> <span class="n">decrease_y</span><span class="p">:</span>
+                <span class="n">next_y</span> <span class="o">-=</span> <span class="n">move_step_length</span>
+                <span class="k">if</span> <span class="n">next_y</span> <span class="o">&lt;</span> <span class="n">end_y</span><span class="p">:</span>
+                    <span class="n">next_y</span> <span class="o">=</span> <span class="n">end_y</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">next_y</span> <span class="o">+=</span> <span class="n">move_step_length</span>
+                <span class="k">if</span> <span class="n">next_y</span> <span class="o">&gt;</span> <span class="n">end_y</span><span class="p">:</span>
+                    <span class="n">next_y</span> <span class="o">=</span> <span class="n">end_y</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="n">next_x</span><span class="p">,</span> <span class="n">next_y</span><span class="p">,</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_MOVE</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">next_x</span> <span class="o">==</span> <span class="n">end_x</span> <span class="ow">and</span> <span class="n">next_y</span> <span class="o">==</span> <span class="n">end_y</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="n">next_x</span><span class="p">,</span> <span class="n">next_y</span><span class="p">,</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_UP</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="n">move_steps_delay</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Python Scrcpy Client</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=leng-yue&repo=py-scrcpy-client&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../scrcpy.html">scrcpy package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Lengyue.
+      
+    </div>
+
+    
+    <a href="https://github.com/leng-yue/py-scrcpy-client" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
