@@ -1,3 +1,7 @@
+"""
+This module includes all consts used in this project
+"""
+
 # Action
 ACTION_DOWN = 0
 ACTION_UP = 1

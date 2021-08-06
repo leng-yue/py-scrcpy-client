@@ -34,6 +34,7 @@ black = {version = "*", allow-prereleases = true}
 pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
 Sphinx = "^4.1.2"
+myst-parser = "^0.15.1"
 
 [tool.isort]
 profile = "black"

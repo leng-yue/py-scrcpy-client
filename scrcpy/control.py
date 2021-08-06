@@ -12,7 +12,7 @@ def inject(control_type: int):
     Inject control code, with this inject, we will be able to do unit test
 
     Args:
-        control_type: event to senf, TYPE_*
+        control_type: event to send, TYPE_*
     """
 
     def wrapper(f):
