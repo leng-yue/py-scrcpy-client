@@ -27,14 +27,16 @@ class Client:
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
-        :param device: Android device, select first one if none, from serial if str
-        :param max_width: frame width that will be broadcast from android server
-        :param bitrate: bitrate
-        :param max_fps: 0 means not limited. supported after android 10
-        :param flip: flip the video
-        :param block_frame: only return nonempty frames, may block cv2 render thread
-        :param stay_awake: keep Android device awake
-        :param lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
+
+        Args:
+            device: Android device, select first one if none, from serial if str
+            max_width: frame width that will be broadcast from android server
+            bitrate: bitrate
+            max_fps: maximum fps, 0 means not limited (supported after android 10)
+            flip: flip the video
+            block_frame: only return nonempty frames, may block cv2 render thread
+            stay_awake: keep Android device awake
+            lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
         """
 
         if device is None:
@@ -67,7 +69,7 @@ class Client:
         self.control_socket: Optional[socket.socket] = None
         self.control_socket_lock = threading.Lock()
 
-    def init_server_connection(self):
+    def __init_server_connection(self) -> None:
         """
         Connect to android server, there will be two sockets, video and control socket.
         This method will set: video_socket, control_socket, resolution variables
@@ -99,7 +101,7 @@ class Client:
         self.resolution = struct.unpack(">HH", res)
         self.__video_socket.setblocking(False)
 
-    def deploy_server(self):
+    def __deploy_server(self) -> None:
         """
         Deploy server to android device
         """
@@ -135,12 +137,14 @@ class Client:
     def start(self, threaded: bool = False) -> None:
         """
         Start listening video stream
-        :param threaded: Run stream loop in a different thread to avoid blocking
+
+        Args:
+            threaded: Run stream loop in a different thread to avoid blocking
         """
         assert self.alive is False
 
-        self.deploy_server()
-        self.init_server_connection()
+        self.__deploy_server()
+        self.__init_server_connection()
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
 
@@ -161,7 +165,7 @@ class Client:
         if self.__video_socket is not None:
             self.__video_socket.close()
 
-    def __stream_loop(self):
+    def __stream_loop(self) -> None:
         """
         Core loop for video parsing
         """
@@ -189,25 +193,31 @@ class Client:
     def add_listener(self, cls: str, listener: Callable[..., Any]) -> None:
         """
         Add a video listener
-        :param cls: Listener category, support: init, frame
-        :param listener: A function to receive frame np.ndarray
+
+        Args:
+            cls: Listener category, support: init, frame
+            listener: A function to receive frame np.ndarray
         """
         self.listeners[cls].append(listener)
 
     def remove_listener(self, cls: str, listener: Callable[..., Any]) -> None:
         """
         Remove a video listener
-        :param cls: Listener category, support: init, frame
-        :param listener: A function to receive frame np.ndarray
+
+        Args:
+            cls: Listener category, support: init, frame
+            listener: A function to receive frame np.ndarray
         """
         self.listeners[cls].remove(listener)
 
-    def __send_to_listeners(self, cls: str, *args, **kwargs):
+    def __send_to_listeners(self, cls: str, *args, **kwargs) -> None:
         """
         Send event to listeners
-        :param cls: Listener type
-        :param *args: Other arguments
-        :param *kwargs: Other arguments
+
+        Args:
+            cls: Listener type
+            *args: Other arguments
+            *kwargs: Other arguments
         """
         for fun in self.listeners[cls]:
             fun(*args, **kwargs)

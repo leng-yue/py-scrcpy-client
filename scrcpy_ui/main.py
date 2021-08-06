@@ -100,8 +100,10 @@ class MainWindow(QMainWindow):
     def map_code(self, code):
         """
         Map qt keycode ti android keycode
-        :param code: qt keycode
-        :return: android keycode, -1 if not founded
+
+        Args:
+            code: qt keycode
+            android keycode, -1 if not founded
         """
 
         if code == -1:

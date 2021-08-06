@@ -10,8 +10,9 @@ from scrcpy import const
 def inject(control_type: int):
     """
     Inject control code, with this inject, we will be able to do unit test
-    :param control_type:
-    :return:
+
+    Args:
+        control_type: event to senf, TYPE_*
     """
 
     def wrapper(f):
@@ -38,9 +39,11 @@ class ControlSender:
     ) -> bytes:
         """
         Send keycode to device
-        :param keycode: const.KEYCODE_*
-        :param action: ACTION_DOWN | ACTION_UP
-        :param repeat: repeat count
+
+        Args:
+            keycode: const.KEYCODE_*
+            action: ACTION_DOWN | ACTION_UP
+            repeat: repeat count
         """
         return struct.pack(">Biii", action, keycode, repeat, 0)
 
@@ -48,7 +51,9 @@ class ControlSender:
     def text(self, text: str) -> bytes:
         """
         Send text to device
-        :param text:
+
+        Args:
+            text: text to send
         """
 
         buffer = text.encode("utf-8")
@@ -60,10 +65,12 @@ class ControlSender:
     ) -> bytes:
         """
         Touch screen
-        :param x: Position x
-        :param y: Position y
-        :param action: ACTION_DOWN | ACTION_UP | ACTION_MOVE
-        :param touch_id: Default using virtual id -1, you can specify it to emulate multi finger touch
+
+        Args:
+            x: horizontal position
+            y: vertical position
+            action: ACTION_DOWN | ACTION_UP | ACTION_MOVE
+            touch_id: Default using virtual id -1, you can specify it to emulate multi finger touch
         """
         x, y = max(x, 0), max(y, 0)
         return struct.pack(
@@ -82,10 +89,12 @@ class ControlSender:
     def scroll(self, x: int, y: int, h: int, v: int) -> bytes:
         """
         Scroll screen
-        :param x:
-        :param y:
-        :param h: horizontal movement
-        :param v: vertical movement
+
+        Args:
+            x: horizontal position
+            y: vertical position
+            h: horizontal movement
+            v: vertical movement
         """
 
         x, y = max(x, 0), max(y, 0)
@@ -103,7 +112,9 @@ class ControlSender:
     def back_or_turn_screen_on(self, action: int = const.ACTION_DOWN) -> bytes:
         """
         If the screen is off, it is turned on only on ACTION_DOWN
-        :param action: ACTION_DOWN | ACTION_UP
+
+        Args:
+            action: ACTION_DOWN | ACTION_UP
         """
         return struct.pack(">B", action)
 
@@ -158,8 +169,10 @@ class ControlSender:
     def set_clipboard(self, text: str, paste: bool = False) -> bytes:
         """
         Set clipboard
-        :param text: the string you want to set
-        :param paste: paste now
+
+        Args:
+            text: the string you want to set
+            paste: paste now
         """
         buffer = text.encode("utf-8")
         return struct.pack(">?i", paste, len(buffer)) + buffer
@@ -168,7 +181,9 @@ class ControlSender:
     def set_screen_power_mode(self, mode: int = scrcpy.POWER_MODE_NORMAL) -> bytes:
         """
         Set screen power mode
-        :param mode: POWER_MODE_OFF | POWER_MODE_NORMAL
+
+        Args:
+            mode: POWER_MODE_OFF | POWER_MODE_NORMAL
         """
         return struct.pack(">b", mode)
 
@@ -190,12 +205,14 @@ class ControlSender:
     ) -> None:
         """
         Swipe on screen
-        :param start_x:
-        :param start_y:
-        :param end_x:
-        :param end_y:
-        :param move_step_length:
-        :param move_steps_delay:
+
+        Args:
+            start_x: start horizontal position
+            start_y: start vertical position
+            end_x: start horizontal position
+            end_y: end vertical position
+            move_step_length: length per step
+            move_steps_delay: sleep seconds after each step
         :return:
         """
 
