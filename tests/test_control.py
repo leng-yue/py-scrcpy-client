@@ -5,7 +5,7 @@ from scrcpy.control import ControlSender
 
 
 class MockParent:
-    __control_socket = None
+    control_socket = None
     resolution = (1920, 1080)
 
 
@@ -88,8 +88,8 @@ def test_get_clipboard():
                     return b"\x00\x00\x00\x05"
                 return b"test0"
 
-        __control_socket = MockSocket()
-        __control_socket_lock = threading.Lock()
+        control_socket = MockSocket()
+        control_socket_lock = threading.Lock()
 
     assert ControlSender(MockClipboardParent()).get_clipboard() == "test0"
 

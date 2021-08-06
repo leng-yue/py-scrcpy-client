@@ -3,7 +3,7 @@ import socket
 import struct
 import threading
 from time import sleep
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, Tuple
 
 import cv2
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
@@ -64,8 +64,8 @@ class Client:
         self.alive = False
         self.__server_stream: Optional[_AdbStreamConnection] = None
         self.__video_socket: Optional[socket.socket] = None
-        self.__control_socket: Optional[socket.socket] = None
-        self.__control_socket_lock = threading.Lock()
+        self.control_socket: Optional[socket.socket] = None
+        self.control_socket_lock = threading.Lock()
 
     def init_server_connection(self):
         """
@@ -88,7 +88,7 @@ class Client:
         if not len(dummy_byte):
             raise ConnectionError("Did not receive Dummy Byte!")
 
-        self.__control_socket = self.device.create_connection(
+        self.control_socket = self.device.create_connection(
             Network.LOCAL_ABSTRACT, "scrcpy"
         )
         self.device_name = self.__video_socket.recv(64).decode("utf-8").rstrip("\x00")
@@ -137,6 +137,8 @@ class Client:
         Start listening video stream
         :param threaded: Run stream loop in a different thread to avoid blocking
         """
+        assert self.alive is False
+
         self.deploy_server()
         self.init_server_connection()
         self.alive = True
@@ -154,7 +156,7 @@ class Client:
         self.alive = False
         if self.__server_stream is not None:
             self.__server_stream.close()
-        if self.__control_socket is not None:
+        if self.control_socket is not None:
             self.__server_stream.close()
         if self.__video_socket is not None:
             self.__video_socket.close()

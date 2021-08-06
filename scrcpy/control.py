@@ -18,9 +18,9 @@ def inject(control_type: int):
         @functools.wraps(f)
         def inner(*args, **kwargs):
             package = struct.pack(">B", control_type) + f(*args, **kwargs)
-            if args[0].parent.__control_socket is not None:
-                with args[0].parent.__control_socket_lock:
-                    args[0].parent.__control_socket.send(package)
+            if args[0].parent.control_socket is not None:
+                with args[0].parent.control_socket_lock:
+                    args[0].parent.control_socket.send(package)
             return package
 
         return inner
@@ -133,9 +133,9 @@ class ControlSender:
         Get clipboard
         """
         # Since this function need socket response, we can't auto inject it any more
-        s: socket.socket = self.parent.__control_socket
+        s: socket.socket = self.parent.control_socket
 
-        with self.parent.__control_socket_lock:
+        with self.parent.control_socket_lock:
             # Flush socket
             s.setblocking(False)
             while True:
