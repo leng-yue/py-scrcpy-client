@@ -13,13 +13,15 @@
 import os
 import sys
 sys.path.insert(0, '../')
+sys.path.insert(0, '../../')
+sys.path.insert(0, '../../../')
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'scrcpy-client'
-copyright = '2021, Matteo Ferla'
-author = 'Matteo Ferla'
+project = 'Python Scrcpy Client'
+copyright = '2021, Lengyue'
+author = 'Lengyue'
 
 
 # -- General configuration ---------------------------------------------------
@@ -56,6 +58,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
+html_theme_options = {
+    "show_powered_by": False,
+    "github_user": "leng-yue",
+    "github_repo": "py-scrcpy-client",
+    "github_banner": True,
+    "show_related": False,
+    "note_bg": "#FFF59C",
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -69,4 +79,3 @@ html_static_path = ['_static']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-napoleon_google_docstring = True

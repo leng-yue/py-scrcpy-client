@@ -33,6 +33,7 @@ isort = "*"
 black = {version = "*", allow-prereleases = true}
 pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
+Sphinx = "^4.1.2"
 
 [tool.isort]
 profile = "black"
