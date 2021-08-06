@@ -3,7 +3,7 @@ import socket
 import struct
 import threading
 from time import sleep
-from typing import Any, Callable, Optional, Union, Tuple
+from typing import Any, Callable, Optional, Union
 
 import cv2
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb

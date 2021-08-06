@@ -1,6 +1,5 @@
 import pathlib
 import pickle
-from typing import Optional
 
 from scrcpy import Client
 
