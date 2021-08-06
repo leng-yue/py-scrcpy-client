@@ -82,9 +82,9 @@ jobs:
           python -m pip install --upgrade pip poetry
           poetry config virtualenvs.create false --local
           poetry install
-      - name: Build docs
-        working-directory: docs/
-        run: make html
+      - uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "docs/"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:

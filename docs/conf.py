@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import scrcpy
 sys.path.insert(0, 'G:\\scrcpy-client')
 
 
