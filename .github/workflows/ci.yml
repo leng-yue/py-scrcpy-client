@@ -76,12 +76,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install python3-sphinx
-          python -m pip install --upgrade pip poetry
-          poetry config virtualenvs.create false --local
-          poetry install
+          sudo python -m pip install --upgrade pip poetry
+          sudo poetry config virtualenvs.create false --local
+          sudo poetry install
       - name: Build docs
         working-directory: docs/
-        run: make html
+        run: sudo make html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
