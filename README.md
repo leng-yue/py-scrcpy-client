@@ -17,7 +17,9 @@
 
 This package allows you to view and control android device in realtime.
 
-![demo gif](https://raw.githubusercontent.com/leng-yue/py-scrcpy-client/main/demo.gif)
+![demo gif](https://raw.githubusercontent.com/leng-yue/py-scrcpy-client/main/demo.gif)  
+
+Note: This gif is compressed and experience lower quality than actual.
 
 ## How to use
 To begin with, you need to install this package via pip:
