@@ -30,11 +30,11 @@ class Client:
         :param device: Android device, select first one if none, from serial if str
         :param max_width: frame width that will be broadcast from android server
         :param bitrate: bitrate
-        :param max_fps: 0 means not max fps. supported after android 10
+        :param max_fps: 0 means not limited. supported after android 10
         :param flip: flip the video
         :param block_frame: only return nonempty frames, may block cv2 render thread
         :param stay_awake: keep Android device awake
-        :param lock_screen_orientation: lock screen orientation
+        :param lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
         """
 
         if device is None:
@@ -62,10 +62,10 @@ class Client:
 
         # Need to destroy
         self.alive = False
-        self.server_stream: Optional[_AdbStreamConnection] = None
-        self.video_socket: Optional[socket.socket] = None
-        self.control_socket: Optional[socket.socket] = None
-        self.control_socket_lock = threading.Lock()
+        self.__server_stream: Optional[_AdbStreamConnection] = None
+        self.__video_socket: Optional[socket.socket] = None
+        self.__control_socket: Optional[socket.socket] = None
+        self.__control_socket_lock = threading.Lock()
 
     def init_server_connection(self):
         """
@@ -74,7 +74,7 @@ class Client:
         """
         for _ in range(30):
             try:
-                self.video_socket = self.device.create_connection(
+                self.__video_socket = self.device.create_connection(
                     Network.LOCAL_ABSTRACT, "scrcpy"
                 )
                 break
@@ -84,20 +84,20 @@ class Client:
         else:
             raise ConnectionError("Failed to connect scrcpy-server after 3 seconds")
 
-        dummy_byte = self.video_socket.recv(1)
+        dummy_byte = self.__video_socket.recv(1)
         if not len(dummy_byte):
             raise ConnectionError("Did not receive Dummy Byte!")
 
-        self.control_socket = self.device.create_connection(
+        self.__control_socket = self.device.create_connection(
             Network.LOCAL_ABSTRACT, "scrcpy"
         )
-        self.device_name = self.video_socket.recv(64).decode("utf-8").rstrip("\x00")
+        self.device_name = self.__video_socket.recv(64).decode("utf-8").rstrip("\x00")
         if not len(self.device_name):
             raise ConnectionError("Did not receive Device Name!")
 
-        res = self.video_socket.recv(4)
+        res = self.__video_socket.recv(4)
         self.resolution = struct.unpack(">HH", res)
-        self.video_socket.setblocking(False)
+        self.__video_socket.setblocking(False)
 
     def deploy_server(self):
         """
@@ -106,28 +106,28 @@ class Client:
         server_root = os.path.abspath(os.path.dirname(__file__))
         server_file_path = server_root + "/scrcpy-server.jar"
         self.device.push(server_file_path, "/data/local/tmp/")
-        self.server_stream = self.device.shell(
+        self.__server_stream = self.device.shell(
             [
                 "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
                 "app_process",
                 "/",
                 "com.genymobile.scrcpy.Server",
-                "1.18",
-                "info",
-                f"{self.max_width}",
-                f"{self.bitrate}",
-                f"{self.max_fps}",
-                f"{self.lock_screen_orientation}",
-                "true",
-                "-",
-                "false",
-                "true",
-                "0",
-                "false",
-                "true" if self.stay_awake else "false",
-                "-",
-                "-",
-                "false",
+                "1.18",  # Scrcpy server version
+                "info",  # Log level: info, verbose...
+                f"{self.max_width}",  # Max screen width (long side)
+                f"{self.bitrate}",  # Bitrate of video
+                f"{self.max_fps}",  # Max frame per second
+                f"{self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
+                "true",  # Tunnel forward
+                "-",  # Crop screen
+                "false",  # Send frame rate to client
+                "true",  # Control enabled
+                "0",  # Display id
+                "false",  # Show touches
+                "true" if self.stay_awake else "false",  # Stay awake
+                "-",  # Codec (video encoding) options
+                "-",  # Encoder name
+                "false",  # Power off screen after server closed
             ],
             stream=True,
         )
@@ -148,19 +148,25 @@ class Client:
             self.__stream_loop()
 
     def stop(self) -> None:
+        """
+        Stop listening (both threaded and blocked)
+        """
         self.alive = False
-        if self.server_stream is not None:
-            self.server_stream.close()
-        if self.control_socket is not None:
-            self.server_stream.close()
-        if self.video_socket is not None:
-            self.video_socket.close()
+        if self.__server_stream is not None:
+            self.__server_stream.close()
+        if self.__control_socket is not None:
+            self.__server_stream.close()
+        if self.__video_socket is not None:
+            self.__video_socket.close()
 
     def __stream_loop(self):
+        """
+        Core loop for video parsing
+        """
         codec = CodecContext.create("h264", "r")
         while self.alive:
             try:
-                raw_h264 = self.video_socket.recv(0x10000)
+                raw_h264 = self.__video_socket.recv(0x10000)
                 packets = codec.parse(raw_h264)
                 for packet in packets:
                     frames = codec.decode(packet)
@@ -195,5 +201,11 @@ class Client:
         self.listeners[cls].remove(listener)
 
     def __send_to_listeners(self, cls: str, *args, **kwargs):
+        """
+        Send event to listeners
+        :param cls: Listener type
+        :param *args: Other arguments
+        :param *kwargs: Other arguments
+        """
         for fun in self.listeners[cls]:
             fun(*args, **kwargs)
