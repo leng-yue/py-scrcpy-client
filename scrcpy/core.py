@@ -161,7 +161,7 @@ class Client:
         if self.__server_stream is not None:
             self.__server_stream.close()
         if self.control_socket is not None:
-            self.__server_stream.close()
+            self.control_socket.close()
         if self.__video_socket is not None:
             self.__video_socket.close()
 
