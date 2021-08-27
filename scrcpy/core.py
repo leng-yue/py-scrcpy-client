@@ -2,6 +2,7 @@ import os
 import socket
 import struct
 import threading
+import time
 from time import sleep
 from typing import Any, Callable, Optional, Union
 
@@ -184,6 +185,7 @@ class Client:
                         self.resolution = (frame.shape[1], frame.shape[0])
                         self.__send_to_listeners(EVENT_FRAME, frame)
             except BlockingIOError:
+                time.sleep(0.01)
                 if not self.block_frame:
                     self.__send_to_listeners(EVENT_FRAME, None)
             except OSError as e:  # Socket Closed
