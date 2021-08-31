@@ -67,3 +67,18 @@ client.control.touch(100, 200, scrcpy.ACTION_DOWN)
 # Mouseup
 client.control.touch(100, 200, scrcpy.ACTION_UP)
 ```
+
+## Get device information
+```python
+# Resolution
+client.resolution
+# Screenshot / Last frame
+client.last_frame
+# Device Name
+client.device_name
+```
+
+## Reduce CPU usage
+You can use `max_width`, `bitrate`, and `max_fps` parameter to limit the bitrate of the video stream.  
+After reducing the bitrate of video stream, the H264 decoder can save much CPU resources.  
+This is very helpful when you don't need a 10 ms level experience. (You probably only need 5 fps in most automation).  
