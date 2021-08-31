@@ -101,6 +101,23 @@ For example, you can send a touch event by</p>
 </pre></div>
 </div>
 </section>
+<section id="get-device-information">
+<h2>Get device information<a class="headerlink" href="#get-device-information" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Resolution</span>
+<span class="n">client</span><span class="o">.</span><span class="n">resolution</span>
+<span class="c1"># Screenshot / Last frame</span>
+<span class="n">client</span><span class="o">.</span><span class="n">last_frame</span>
+<span class="c1"># Device Name</span>
+<span class="n">client</span><span class="o">.</span><span class="n">device_name</span>
+</pre></div>
+</div>
+</section>
+<section id="reduce-cpu-usage">
+<h2>Reduce CPU usage<a class="headerlink" href="#reduce-cpu-usage" title="Permalink to this headline">¶</a></h2>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">max_width</span></code>, <code class="docutils literal notranslate"><span class="pre">bitrate</span></code>, and <code class="docutils literal notranslate"><span class="pre">max_fps</span></code> parameter to limit the bitrate of the video stream.<br />
+After reducing the bitrate of video stream, the H264 decoder can save much CPU resources.<br />
+This is very helpful when you don’t need a 10 ms level experience. (You probably only need 5 fps in most automation).</p>
+</section>
 </section>
 
 
@@ -132,6 +149,8 @@ For example, you can send a touch event by</p>
 <li class="toctree-l2"><a class="reference internal" href="#adb-connection">ADB connection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bind-events">Bind events</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#send-actions">Send actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-device-information">Get device information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reduce-cpu-usage">Reduce CPU usage</a></li>
 </ul>
 </li>
 </ul>
