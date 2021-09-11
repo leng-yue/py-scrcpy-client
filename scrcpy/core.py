@@ -4,9 +4,10 @@ import struct
 import threading
 import time
 from time import sleep
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, Tuple
 
 import cv2
+import numpy as np
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
 from av.codec import CodecContext
 
@@ -49,9 +50,9 @@ class Client:
         self.listeners = dict(frame=[], init=[])
 
         # User accessible
-        self.last_frame = None
-        self.resolution = None
-        self.device_name = None
+        self.last_frame: Optional[np.ndarray] = None
+        self.resolution: Optional[Tuple[int, int]] = None
+        self.device_name: Optional[str] = None
         self.control = ControlSender(self)
 
         # Params
