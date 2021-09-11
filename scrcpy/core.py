@@ -4,7 +4,7 @@ import struct
 import threading
 import time
 from time import sleep
-from typing import Any, Callable, Optional, Union, Tuple
+from typing import Any, Callable, Optional, Tuple, Union
 
 import cv2
 import numpy as np
