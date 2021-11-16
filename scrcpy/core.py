@@ -116,7 +116,7 @@ class Client:
                 "app_process",
                 "/",
                 "com.genymobile.scrcpy.Server",
-                "1.18",  # Scrcpy server version
+                "1.20",  # Scrcpy server version
                 "info",  # Log level: info, verbose...
                 f"{self.max_width}",  # Max screen width (long side)
                 f"{self.bitrate}",  # Bitrate of video
