@@ -35,8 +35,8 @@ Here is the document GitHub page: [Documentation](https://leng-yue.github.io/py-
 Also, you can check `scrcpy_ui/main.py` for a full functional demo.
 
 ## Contribution & Development
-Already implemented all functions in scrcpy server 1.18.  
-Please check scrcpy server 1.18 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.18/server)
+Already implemented all functions in scrcpy server 1.20.  
+Please check scrcpy server 1.20 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.20/server)
 
 ## Reference & Appreciation
 - Core: [scrcpy](https://github.com/Genymobile/scrcpy)
