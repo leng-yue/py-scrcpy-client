@@ -10,8 +10,8 @@
         <img src="https://img.shields.io/codecov/c/github/leng-yue/py-scrcpy-client" />
     </a>
     <img src="https://img.shields.io/github/license/leng-yue/py-scrcpy-client" />
-    <a href="https://github.com/Genymobile/scrcpy/tree/v1.18" target="_blank">
-        <img src="https://img.shields.io/badge/scrcpy-v1.18-violet" />
+    <a href="https://github.com/Genymobile/scrcpy/tree/v1.20" target="_blank">
+        <img src="https://img.shields.io/badge/scrcpy-v1.20-violet" />
     </a>
 </p>
 
