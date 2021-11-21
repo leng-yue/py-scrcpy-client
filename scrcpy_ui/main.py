@@ -1,8 +1,9 @@
 from typing import Optional
 
 import click
+import cv2
 from adbutils import adb
-from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
+from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import scrcpy
@@ -17,6 +18,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.max_width = max_width
 
         # Setup devices
         self.devices = self.list_devices()
@@ -27,7 +29,7 @@ class MainWindow(QMainWindow):
 
         # Setup client
         self.client = scrcpy.Client(
-            max_width=max_width, device=self.device, flip=self.ui.flip.isChecked()
+            device=self.device, flip=self.ui.flip.isChecked(), bitrate=1000000000
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
@@ -85,7 +87,8 @@ class MainWindow(QMainWindow):
             focused_widget = QApplication.focusWidget()
             if focused_widget is not None:
                 focused_widget.clearFocus()
-            self.client.control.touch(evt.position().x(), evt.position().y(), action)
+            ratio = self.max_width / max(self.client.resolution)
+            self.client.control.touch(evt.position().x()/ratio, evt.position().y()/ratio, action)
 
         return handler
 
@@ -135,6 +138,7 @@ class MainWindow(QMainWindow):
     def on_frame(self, frame):
         app.processEvents()
         if frame is not None:
+            ratio = self.max_width / max(self.client.resolution)
             image = QImage(
                 frame,
                 frame.shape[1],
@@ -143,8 +147,9 @@ class MainWindow(QMainWindow):
                 QImage.Format_BGR888,
             )
             pix = QPixmap(image)
+            pix.setDevicePixelRatio(1 / ratio)
             self.ui.label.setPixmap(pix)
-            self.resize(*self.client.resolution)
+            self.resize(1, 1)
 
     def closeEvent(self, _):
         self.client.stop()
