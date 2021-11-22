@@ -139,7 +139,7 @@ class Client:
             stream=True,
         )
         # Wait for server to start
-        # self.__server_stream.check_okay()
+        self.__server_stream.check_okay()
 
     def start(self, threaded: bool = False) -> None:
         """
