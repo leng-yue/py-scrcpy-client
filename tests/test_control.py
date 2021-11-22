@@ -2,11 +2,19 @@ import threading
 
 import scrcpy
 from scrcpy.control import ControlSender
+from tests.utils import FakeStream
 
 
 class MockParent:
-    control_socket = None
+    class FakeSocket:
+        def send(self, data):
+            pass
+
     resolution = (1920, 1080)
+
+    def __init__(self):
+        self.control_socket_lock = threading.Lock()
+        self.control_socket = FakeStream()
 
 
 control = ControlSender(MockParent())
@@ -125,3 +133,5 @@ def test_swipe():
     control.swipe(100, 200, 2000, 2000)
     control.swipe(300, 400, 100, 200)
     control.swipe(2000, 2000, 100, 200)
+    control.swipe(2000, 2000, -100, -200)
+    control.swipe(100, 200, 2010, 2010, move_step_length=100)

@@ -18,7 +18,7 @@ from .control import ControlSender
 class Client:
     def __init__(
         self,
-        device: Optional[Union[AdbDevice, str]] = None,
+        device: Optional[Union[AdbDevice, str, any]] = None,
         max_width: int = 0,
         bitrate: int = 8000000,
         max_fps: int = 0,
@@ -92,7 +92,7 @@ class Client:
             raise ConnectionError("Failed to connect scrcpy-server after 3 seconds")
 
         dummy_byte = self.__video_socket.recv(1)
-        if not len(dummy_byte):
+        if not len(dummy_byte) or dummy_byte != b"\x00":
             raise ConnectionError("Did not receive Dummy Byte!")
 
         self.control_socket = self.device.create_connection(

@@ -1,35 +1,17 @@
 import pathlib
 import pickle
 
+import pytest
+from adbutils import AdbError
+
 from scrcpy import Client
-
-
-class FakeStream:
-    def __init__(self, data):
-        self.data = data
-        self.die = False
-
-    def recv(self, a):
-        if self.die:
-            raise OSError()
-        if len(self.data) == 0:
-            raise BlockingIOError()
-        val = self.data.pop(0)
-        if val is None:
-            raise BlockingIOError()
-        return val
-
-    @staticmethod
-    def setblocking(a):
-        pass
-
-    def close(self):
-        self.die = True
+from tests.utils import FakeStream
 
 
 class FakeADBDevice:
-    def __init__(self, data):
+    def __init__(self, data, wait=0):
         self.data = data
+        self.__wait = wait
 
     @staticmethod
     def push(a, b):
@@ -40,7 +22,45 @@ class FakeADBDevice:
         return FakeStream([])
 
     def create_connection(self, a, b):
+        if self.__wait > 0:
+            self.__wait -= 1
+            raise AdbError()
+
         return FakeStream(self.data.pop(0))
+
+
+def test_connection():
+    client = Client(
+        device=FakeADBDevice([[b"\x00", b"test", b"\x07\x80\x04\x38"], []], wait=3)
+    )
+    client.start(threaded=True)
+    client.stop()
+
+    with pytest.raises(ConnectionError):
+        client = Client(
+            device=FakeADBDevice(
+                [[b"\x00", b"test", b"\x07\x80\x04\x38"], []], wait=1000
+            ),
+            connection_timeout=1000,
+        )
+        client.start(threaded=True)
+        client.stop()
+
+    # No Dummy Bytes Error
+    with pytest.raises(ConnectionError) as e:
+        client = Client(
+            device=FakeADBDevice([[b"\x01", b"test", b"\x07\x80\x04\x38"], []])
+        )
+        client.start(threaded=True)
+        client.stop()
+    assert "Dummy Byte" in str(e.value)
+
+    # No Device Name Error
+    with pytest.raises(ConnectionError) as e:
+        client = Client(device=FakeADBDevice([[b"\x00", b"", b"\x07\x80\x04\x38"], []]))
+        client.start(threaded=True)
+        client.stop()
+    assert "Device Name" in str(e.value)
 
 
 def test_init_listener():
@@ -69,13 +89,17 @@ def test_parse_video():
     video_data = pickle.load(
         (pathlib.Path(__file__).parent / "test_video_data.pkl").resolve().open("rb")
     )
-    data = [[b"\x00", b"test", b"\x07\x80\x04\x38", None] + video_data, []]
+    data = [
+        [b"\x00", b"test", b"\x07\x80\x04\x38", None] + video_data + [b"OSError"],
+        [],
+    ]
     frames = []
 
     # Create client
     client = Client(device=FakeADBDevice(data), flip=True)
     client.add_listener("frame", on_frame)
-    client.start()
+    with pytest.raises(OSError):
+        client.start()
 
     # Wait frames
     assert frames[0] is None
