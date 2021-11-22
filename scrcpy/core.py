@@ -26,6 +26,7 @@ class Client:
         block_frame: bool = False,
         stay_awake: bool = False,
         lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
+        connection_timeout: int = 3000,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -39,6 +40,7 @@ class Client:
             block_frame: only return nonempty frames, may block cv2 render thread
             stay_awake: keep Android device awake
             lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
+            connection_timeout: timeout for connection, unit is ms
         """
 
         if device is None:
@@ -63,6 +65,7 @@ class Client:
         self.block_frame = block_frame
         self.stay_awake = stay_awake
         self.lock_screen_orientation = lock_screen_orientation
+        self.connection_timeout = connection_timeout
 
         # Need to destroy
         self.alive = False
@@ -76,7 +79,7 @@ class Client:
         Connect to android server, there will be two sockets, video and control socket.
         This method will set: video_socket, control_socket, resolution variables
         """
-        for _ in range(30):
+        for _ in range(self.connection_timeout // 100):
             try:
                 self.__video_socket = self.device.create_connection(
                     Network.LOCAL_ABSTRACT, "scrcpy"
@@ -110,7 +113,7 @@ class Client:
         server_root = os.path.abspath(os.path.dirname(__file__))
         server_file_path = server_root + "/scrcpy-server.jar"
         self.device.push(server_file_path, "/data/local/tmp/")
-        self.__server_stream = self.device.shell(
+        self.__server_stream: _AdbStreamConnection = self.device.shell(
             [
                 "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
                 "app_process",
@@ -135,6 +138,8 @@ class Client:
             ],
             stream=True,
         )
+        # Wait for server to start
+        # self.__server_stream.check_okay()
 
     def start(self, threaded: bool = False) -> None:
         """
