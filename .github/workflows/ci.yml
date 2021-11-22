@@ -33,7 +33,7 @@ jobs:
           poetry config virtualenvs.create false --local
           poetry install
       - name: Static type and format checking
-        run: python script/check.py
+        run: python scripts/check.py
       - name: Test and generate coverage report
         run: |
           pytest --cov=scrcpy --cov-report=xml
