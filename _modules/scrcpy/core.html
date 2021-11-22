@@ -51,7 +51,7 @@
 <div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">AdbDevice</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">AdbDevice</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">bitrate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000000</span><span class="p">,</span>
         <span class="n">max_fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -59,6 +59,7 @@
         <span class="n">block_frame</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">stay_awake</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">lock_screen_orientation</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span><span class="p">,</span>
+        <span class="n">connection_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a scrcpy client, this client won&#39;t be started until you call the start function</span>
@@ -72,6 +73,7 @@
 <span class="sd">            block_frame: only return nonempty frames, may block cv2 render thread</span>
 <span class="sd">            stay_awake: keep Android device awake</span>
 <span class="sd">            lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*</span>
+<span class="sd">            connection_timeout: timeout for connection, unit is ms</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -96,6 +98,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">block_frame</span> <span class="o">=</span> <span class="n">block_frame</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="o">=</span> <span class="n">stay_awake</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span> <span class="o">=</span> <span class="n">lock_screen_orientation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">=</span> <span class="n">connection_timeout</span>
 
         <span class="c1"># Need to destroy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">False</span>
@@ -109,7 +112,7 @@
 <span class="sd">        Connect to android server, there will be two sockets, video and control socket.</span>
 <span class="sd">        This method will set: video_socket, control_socket, resolution variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">//</span> <span class="mi">100</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
                     <span class="n">Network</span><span class="o">.</span><span class="n">LOCAL_ABSTRACT</span><span class="p">,</span> <span class="s2">&quot;scrcpy&quot;</span>
@@ -122,7 +125,7 @@
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Failed to connect scrcpy-server after 3 seconds&quot;</span><span class="p">)</span>
 
         <span class="n">dummy_byte</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummy_byte</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummy_byte</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dummy_byte</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Did not receive Dummy Byte!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
@@ -143,7 +146,7 @@
         <span class="n">server_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
         <span class="n">server_file_path</span> <span class="o">=</span> <span class="n">server_root</span> <span class="o">+</span> <span class="s2">&quot;/scrcpy-server.jar&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="s2">&quot;/data/local/tmp/&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">_AdbStreamConnection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="s2">&quot;CLASSPATH=/data/local/tmp/scrcpy-server.jar&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;app_process&quot;</span><span class="p">,</span>
@@ -168,6 +171,8 @@
             <span class="p">],</span>
             <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># Wait for server to start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="o">.</span><span class="n">check_okay</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Client.start"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
