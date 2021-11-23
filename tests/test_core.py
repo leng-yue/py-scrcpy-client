@@ -19,7 +19,7 @@ class FakeADBDevice:
 
     @staticmethod
     def shell(a, stream=True):
-        return FakeStream([])
+        return FakeStream([b"\x00" * 128])
 
     def create_connection(self, a, b):
         if self.__wait > 0:

@@ -17,6 +17,9 @@ class FakeStream:
             raise OSError()
         return val
 
+    def read(self, a):
+        return self.recv(a)
+
     def check_okay(self):
         return
 
