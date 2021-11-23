@@ -3,9 +3,11 @@ import socket
 import struct
 import threading
 import time
+from io import BufferedIOBase, BytesIO
 from time import sleep
 from typing import Any, Callable, Optional, Tuple, Union
 
+import av
 import cv2
 import numpy as np
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
@@ -139,7 +141,7 @@ class Client:
             stream=True,
         )
         # Wait for server to start
-        self.__server_stream.check_okay()
+        self.__server_stream.read(10)
 
     def start(self, threaded: bool = False) -> None:
         """
