@@ -27,7 +27,7 @@ This means you can add multiple listener to the same stream.
 ```python
 import cv2
 
-def on_frame(self):
+def on_frame(frame):
     # If you set non-blocking (default) in constructor, the frame event receiver 
     # may receive None to avoid blocking event.
     if frame is not None:
@@ -40,9 +40,9 @@ client.add_listener(scrcpy.EVENT_FRAME, on_frame)
 
 [Optional] You can also add a listener to listen the `init` event.
 ```python
-def on_init(self):
+def on_init():
     # Print device name
-    print(self.client.device_name)
+    print(client.device_name)
 client.add_listener(scrcpy.EVENT_INIT, on_init)
 ```
 
