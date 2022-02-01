@@ -179,6 +179,7 @@ def main(max_width: int, device: Optional[str]):
     m.client.start(threaded=True)
     while m.alive:
         m.on_frame(m.client.last_frame)
+        sleep(1/120)
 
 
 if __name__ == "__main__":
