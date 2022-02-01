@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
             device=self.device, flip=self.ui.flip.isChecked(), bitrate=1000000000
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
-        self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
+        # self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
 
         # Bind controllers
         self.ui.button_home.clicked.connect(self.on_click_home)
@@ -173,9 +173,9 @@ def main(max_width: int, device: Optional[str]):
     m = MainWindow(max_width, device)
     m.show()
 
-    m.client.start()
+    m.client.start(threaded=True)
     while m.alive:
-        m.client.start()
+        m.on_frame(m.client.last_frame)
 
 
 if __name__ == "__main__":
