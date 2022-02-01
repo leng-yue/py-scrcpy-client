@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Optional
 
 import click
@@ -40,7 +41,7 @@ class MainWindow(QMainWindow):
 
         # Bind config
         self.ui.combo_device.currentTextChanged.connect(self.choose_device)
-        self.ui.flip.stateChanged.connect(self.on_flip)
+        # self.ui.flip.stateChanged.connect(self.on_flip)
 
         # Bind mouse event
         self.ui.label.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
@@ -71,8 +72,8 @@ class MainWindow(QMainWindow):
         self.ui.combo_device.addItems(items)
         return items
 
-    def on_flip(self, _):
-        self.client.flip = self.ui.flip.isChecked()
+    # def on_flip(self, _):
+    #     self.flip = self.ui.flip.isChecked()
 
     def on_click_home(self):
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
@@ -140,6 +141,8 @@ class MainWindow(QMainWindow):
     def on_frame(self, frame):
         app.processEvents()
         if frame is not None:
+            if self.ui.flip.isChecked():
+                frame = cv2.flip(frame, 1)
             ratio = self.max_width / max(self.client.resolution)
             image = QImage(
                 frame,
