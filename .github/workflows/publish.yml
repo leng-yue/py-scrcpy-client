@@ -1,4 +1,4 @@
-name: CI
+name: Publish
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   tests:
-    name: "Test on python ${{ matrix.python-version }}, ${{ matrix.os }}"
+    name: "Publish on python ${{ matrix.python-version }}, ${{ matrix.os }}"
     runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
