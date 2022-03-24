@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "scrcpy-client"
+name = "muti-scrcpy-client"
 version = "0.3.7"
-description = "A client of scrcpy"
-authors = ["lengyue <lengyue@lengyue.me>"]
+description = "A muticlient of scrcpy"
+authors = ["ianvzs <ianvzs@outlook.com>"]
 readme = "README.md"
-repository = "https://github.com/leng-yue/py-scrcpy-client"
+repository = "https://github.com/IanVzs/py-muti-scrcpy"
 license = "MIT"
 packages = [
     { include = "scrcpy" },
@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-py-scrcpy = "scrcpy_ui:main"
+py-muti-scrcpy = "scrcpy_ui:main"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.10"

@@ -1,89 +1,65 @@
-from typing import Optional
-
-import click
-import cv2
-from adbutils import adb
-from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
-
+import sys
 import scrcpy
+import numpy as np
+from adbutils import adb
+
+from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
+from PySide6.QtWidgets import QHeaderView, QAbstractItemView
+from PySide6 import QtCore # QTranslator
+from PySide6.QtGui import QImage, QPixmap, QMouseEvent
+
 
 from .ui_main import Ui_MainWindow
+from .ui_screen import Ui_Dialog
+from .worker import ThreadWorker
 
 app = QApplication([])
 
-
-class MainWindow(QMainWindow):
-    def __init__(self, max_width: Optional[int], serial: Optional[str] = None):
-        super(MainWindow, self).__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-        self.max_width = max_width
-
-        # Setup devices
-        self.devices = self.list_devices()
-        if serial:
-            self.choose_device(serial)
-        self.device = adb.device(serial=self.ui.combo_device.currentText())
-        self.alive = True
-
-        # Setup client
-        self.client = scrcpy.Client(
-            device=self.device, flip=self.ui.flip.isChecked(), bitrate=1000000000
-        )
-        self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
-        self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
-
-        # Bind controllers
-        self.ui.button_home.clicked.connect(self.on_click_home)
-        self.ui.button_back.clicked.connect(self.on_click_back)
-
-        # Bind config
-        self.ui.combo_device.currentTextChanged.connect(self.choose_device)
-        self.ui.flip.stateChanged.connect(self.on_flip)
-
-        # Bind mouse event
-        self.ui.label.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
-        self.ui.label.mouseMoveEvent = self.on_mouse_event(scrcpy.ACTION_MOVE)
-        self.ui.label.mouseReleaseEvent = self.on_mouse_event(scrcpy.ACTION_UP)
-
-        # Keyboard event
-        self.keyPressEvent = self.on_key_event(scrcpy.ACTION_DOWN)
-        self.keyReleaseEvent = self.on_key_event(scrcpy.ACTION_UP)
-
-    def choose_device(self, device):
-        if device not in self.devices:
-            msgBox = QMessageBox()
-            msgBox.setText(f"Device serial [{device}] not found!")
-            msgBox.exec()
+class ScreenWindow(QDialog):
+    def __init__(self, name='', serial_no='', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not serial_no:
             return
+        self.ui = Ui_Dialog()
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint) # 始终最前显示
+        self.ui.setupUi(self)
 
-        # Ensure text
-        self.ui.combo_device.setCurrentText(device)
-        # Restart service
-        if getattr(self, "client", None):
-            self.client.stop()
-            self.client.device = adb.device(serial=device)
+        self.alive = True
+        self.max_width = 600
+        self.serial_no = serial_no
+        self.device = adb.device(serial=serial_no)
+        self.client = scrcpy.Client(
+            device=self.device, bitrate=10000000, max_width=640,
+        )
+        # show
+        self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
+        # Bind mouse event
+        self.ui.label_video.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
+        self.ui.label_video.mouseMoveEvent = self.on_mouse_event(scrcpy.ACTION_MOVE)
+        self.ui.label_video.mouseReleaseEvent = self.on_mouse_event(scrcpy.ACTION_UP)
 
-    def list_devices(self):
-        self.ui.combo_device.clear()
-        items = [i.serial for i in adb.device_list()]
-        self.ui.combo_device.addItems(items)
-        return items
-
-    def on_flip(self, _):
-        self.client.flip = self.ui.flip.isChecked()
-
-    def on_click_home(self):
-        self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
-        self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
-
-    def on_click_back(self):
-        self.client.control.back_or_turn_screen_on(scrcpy.ACTION_DOWN)
-        self.client.control.back_or_turn_screen_on(scrcpy.ACTION_UP)
-
+        self.setWindowTitle(QtCore.QCoreApplication.translate("Dialog", name, None))
+        self.show()
+    
+    def on_frame(self, frame):
+        app.processEvents()
+        # print("frame~~~~")
+        if frame is not None:
+            # ratio = self.max_width / max(self.client.resolution)
+            image = QImage(
+                frame,
+                frame.shape[1],
+                frame.shape[0],
+                frame.shape[1] * 3,
+                QImage.Format_BGR888,
+            )
+            pix = QPixmap(image)
+            # pix.setDevicePixelRatio(1 / ratio)
+            self.ui.label_video.setPixmap(pix)
+            self.resize(1, 1)
+    
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
-        def handler(evt: QMouseEvent):
+        def handler(evt:  QMouseEvent):
             focused_widget = QApplication.focusWidget()
             if focused_widget is not None:
                 focused_widget.clearFocus()
@@ -93,90 +69,130 @@ class MainWindow(QMainWindow):
             )
 
         return handler
-
-    def on_key_event(self, action=scrcpy.ACTION_DOWN):
-        def handler(evt: QKeyEvent):
-            code = self.map_code(evt.key())
-            if code != -1:
-                self.client.control.keycode(code, action)
-
-        return handler
-
-    def map_code(self, code):
-        """
-        Map qt keycode ti android keycode
-
-        Args:
-            code: qt keycode
-            android keycode, -1 if not founded
-        """
-
-        if code == -1:
-            return -1
-        if 48 <= code <= 57:
-            return code - 48 + 7
-        if 65 <= code <= 90:
-            return code - 65 + 29
-        if 97 <= code <= 122:
-            return code - 97 + 29
-
-        hard_code = {
-            32: scrcpy.KEYCODE_SPACE,
-            16777219: scrcpy.KEYCODE_DEL,
-            16777248: scrcpy.KEYCODE_SHIFT_LEFT,
-            16777220: scrcpy.KEYCODE_ENTER,
-            16777217: scrcpy.KEYCODE_TAB,
-            16777249: scrcpy.KEYCODE_CTRL_LEFT,
-        }
-        if code in hard_code:
-            return hard_code[code]
-
-        print(f"Unknown keycode: {code}")
-        return -1
-
-    def on_init(self):
-        self.setWindowTitle(f"Serial: {self.client.device_name}")
-
-    def on_frame(self, frame):
-        app.processEvents()
-        if frame is not None:
-            ratio = self.max_width / max(self.client.resolution)
-            image = QImage(
-                frame,
-                frame.shape[1],
-                frame.shape[0],
-                frame.shape[1] * 3,
-                QImage.Format_BGR888,
-            )
-            pix = QPixmap(image)
-            pix.setDevicePixelRatio(1 / ratio)
-            self.ui.label.setPixmap(pix)
-            self.resize(1, 1)
-
+    
     def closeEvent(self, _):
+        print("close~~~~")
         self.client.stop()
         self.alive = False
 
 
-@click.command(help="A simple scrcpy client")
-@click.option(
-    "--max_width",
-    default=800,
-    show_default=True,
-    help="Set max width of the window",
-)
-@click.option(
-    "--device",
-    help="Select device manually (device serial required)",
-)
-def main(max_width: int, device: Optional[str]):
-    m = MainWindow(max_width, device)
+    # def showWindow(self):
+    #     print("移动", self.x(), self.y())
+    #     self.move(int(self.x()), int(self.y()))
+
+class MainWindow(QMainWindow):
+    def __init__(self, account_info=None):
+        super(MainWindow, self).__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        
+        # setting table
+        # self.ui.table_devices.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) # all same size
+        self.ui.table_devices.horizontalHeader().setStretchLastSection(True)
+        self.ui.table_devices.setEditTriggers(QAbstractItemView.NoEditTriggers) # noEdit
+        self.ui.table_devices.setSelectionMode(QAbstractItemView.NoSelection) # noSelection
+        
+        self.write_table_demo(data=[
+            ["自定义1", "QV7141QF1T", "Runing", "pvp", "self.operate_button_widget", "self.others_buttons_widget"],
+            ["自定义2", "123652134125634213", "未启动", "earning", "self.operate_button_widget", "self.others_buttons_widget"]
+        ])
+        self.dict_client = {}
+        self.dict_screen = {}
+        self.show()
+
+    def operate_button_widget(self):
+        button = QPushButton('启动')
+        button.clicked.connect(self.on_click_operate)
+        return button
+
+    def others_buttons_widget(self):
+        widget = QWidget()
+        hlayout = QHBoxLayout()
+        button_edit = QPushButton('编辑')
+        button_edit.setStyleSheet(''' text-align : center;
+                                          background-color : NavajoWhite;
+                                          height : 30px;
+                                          border-style: outset;
+                                          font : 13px  ''')
+        button_cpy = QPushButton('复制')
+        button_cpy.clicked.connect(self.on_click_cpy)
+        button_del = QPushButton('删除')
+        button_del.setStyleSheet(''' text-align : center;
+                                    background-color : LightCoral;
+                                    height : 30px;
+                                    border-style: outset;
+                                    font : 13px; ''')
+        button_show = QPushButton('显示画面')   
+        button_show.clicked.connect(self.on_click_show)
+        hlayout.addWidget(button_edit)
+        hlayout.addWidget(button_cpy)
+        hlayout.addWidget(button_del)
+        hlayout.addWidget(button_show)
+        hlayout.setContentsMargins(5, 2, 5, 2)
+        widget.setLayout(hlayout)
+        return widget
+    
+    def get_table_row_info(self):
+        """
+        ret: tuple[str]
+            row, name, serial_no
+        """
+        button = self.sender()
+        if button:
+            row = self.ui.table_devices.indexAt(button.parent().pos()).row()
+            serial_no = self.ui.table_devices.item(row, 1).text()
+            name = self.ui.table_devices.item(row, 0).text()
+            return row, name, serial_no
+
+    def on_click_cpy(self):
+        pass
+
+    def on_click_show(self):
+        row, name, serial_no = self.get_table_row_info()
+        win_screen = self.dict_screen.get(serial_no)
+        if not win_screen:
+            _win_screen = ScreenWindow(name, serial_no)
+            self.dict_screen[serial_no] = _win_screen
+            self.dict_screen[serial_no].client.start()
+            # self.dict_screen[serial_no].showWindow()
+        else:
+            win_screen.close()
+            del self.dict_screen[serial_no]
+    
+    def on_click_operate(self):
+        row, name, serial_no = self.get_table_row_info()
+        client = self.dict_client.get(serial_no)
+        if not client:
+            tworker = ThreadWorker(row, serial_no)
+            self.dict_client[serial_no] = tworker
+            self.dict_client[serial_no].start()
+        else:
+            client.stop()
+            del self.dict_client[serial_no]
+
+    def write_table_demo(self, data):
+        for item in data:
+            row = self.ui.table_devices.rowCount()
+            self.ui.table_devices.insertRow(row)
+            for j, v in enumerate(item):
+                if "self." in v:
+                    self.ui.table_devices.setCellWidget(row, j, eval(v)())
+                else:
+                    v = QTableWidgetItem(v)
+                    self.ui.table_devices.setItem(row, j, v)
+
+def main():
+    # dialog = LoginDialog()
+    # if dialog.exec() == QDialog.Accepted:
+    #     m = MainWindow(dialog.account_info)
+    #     m.show()
+    
+    # s = ScreenWindow()
+    # s.show()
+    m = MainWindow()
     m.show()
 
-    m.client.start()
-    while m.alive:
-        m.client.start()
-
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()
