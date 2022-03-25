@@ -84,7 +84,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.combobox_sort)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer)
 
@@ -98,13 +100,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.button_search)
 
-
         self.verticalLayout.addLayout(self.horizontalLayout_3)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.table_devices = QTableWidget(self.centralwidget)
-        if (self.table_devices.columnCount() < 6):
+        if self.table_devices.columnCount() < 6:
             self.table_devices.setColumnCount(6)
         __qtablewidgetitem = QTableWidgetItem()
         self.table_devices.setHorizontalHeaderItem(0, __qtablewidgetitem)
@@ -121,7 +122,6 @@ class Ui_MainWindow(object):
         self.table_devices.setObjectName(u"table_devices")
 
         self.horizontalLayout.addWidget(self.table_devices)
-
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -142,7 +142,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.button_all_satrt)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
 
         self.horizontalLayout_2.addItem(self.horizontalSpacer_2)
 
@@ -151,9 +153,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.pushButton)
 
-
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
@@ -171,28 +171,55 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         QMetaObject.connectSlotsByName(MainWindow)
+
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
-        self.button_search.setText(QCoreApplication.translate("MainWindow", u"Search", None))
+        MainWindow.setWindowTitle(
+            QCoreApplication.translate("MainWindow", u"MainWindow", None)
+        )
+        self.actionAbout.setText(
+            QCoreApplication.translate("MainWindow", u"About", None)
+        )
+        self.button_search.setText(
+            QCoreApplication.translate("MainWindow", u"Search", None)
+        )
         ___qtablewidgetitem = self.table_devices.horizontalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"Device", None));
+        ___qtablewidgetitem.setText(
+            QCoreApplication.translate("MainWindow", u"Device", None)
+        )
         ___qtablewidgetitem1 = self.table_devices.horizontalHeaderItem(1)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindow", u"Serial Number", None));
+        ___qtablewidgetitem1.setText(
+            QCoreApplication.translate("MainWindow", u"Serial Number", None)
+        )
         ___qtablewidgetitem2 = self.table_devices.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Status", None));
+        ___qtablewidgetitem2.setText(
+            QCoreApplication.translate("MainWindow", u"Status", None)
+        )
         ___qtablewidgetitem3 = self.table_devices.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindow", u"Run Mode", None));
+        ___qtablewidgetitem3.setText(
+            QCoreApplication.translate("MainWindow", u"Run Mode", None)
+        )
         ___qtablewidgetitem4 = self.table_devices.horizontalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindow", u"Operate", None));
+        ___qtablewidgetitem4.setText(
+            QCoreApplication.translate("MainWindow", u"Operate", None)
+        )
         ___qtablewidgetitem5 = self.table_devices.horizontalHeaderItem(5)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("MainWindow", u"Others", None));
-        self.checkbox_devices.setText(QCoreApplication.translate("MainWindow", u"CheckAll", None))
-        self.button_all_stop.setText(QCoreApplication.translate("MainWindow", u"All Stop", None))
-        self.button_all_satrt.setText(QCoreApplication.translate("MainWindow", u"All Start", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Setting", None))
+        ___qtablewidgetitem5.setText(
+            QCoreApplication.translate("MainWindow", u"Others", None)
+        )
+        self.checkbox_devices.setText(
+            QCoreApplication.translate("MainWindow", u"CheckAll", None)
+        )
+        self.button_all_stop.setText(
+            QCoreApplication.translate("MainWindow", u"All Stop", None)
+        )
+        self.button_all_satrt.setText(
+            QCoreApplication.translate("MainWindow", u"All Start", None)
+        )
+        self.pushButton.setText(
+            QCoreApplication.translate("MainWindow", u"Setting", None)
+        )
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
-    # retranslateUi
 
+    # retranslateUi

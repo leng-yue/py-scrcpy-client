@@ -62,14 +62,14 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_video, 0, 0, 1, 1)
 
-
         self.retranslateUi(Dialog)
 
         QMetaObject.connectSlotsByName(Dialog)
+
     # setupUi
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label_video.setText("")
-    # retranslateUi
 
+    # retranslateUi
