@@ -65,7 +65,7 @@ class ScreenWindow(QDialog):
                 focused_widget.clearFocus()
             ratio = self.max_width / max(self.client.resolution)
             self.client.control.touch(
-                evt.position().x() / ratio, evt.position().y() / ratio, action
+                evt.position().x()-(self.ui.label_video.geometry().x()/2) / ratio, evt.position().y()-(self.ui.label_video.geometry().y()/2) / ratio, action
             )
 
         return handler
@@ -92,13 +92,31 @@ class MainWindow(QMainWindow):
         self.ui.table_devices.setEditTriggers(QAbstractItemView.NoEditTriggers) # noEdit
         self.ui.table_devices.setSelectionMode(QAbstractItemView.NoSelection) # noSelection
         
-        self.write_table_demo(data=[
-            ["自定义1", "QV7141QF1T", "Runing", "pvp", "self.operate_button_widget", "self.others_buttons_widget"],
-            ["自定义2", "123652134125634213", "未启动", "earning", "self.operate_button_widget", "self.others_buttons_widget"]
-        ])
+        self.DictDeviceStatus = {}
+        self.DictDevicesRunMode = {}
         self.dict_client = {}
         self.dict_screen = {}
+
+        self.update_table_data(data=self.get_table_data())
+        
         self.show()
+
+    def get_table_data(self):
+        data = []
+        dict_name = {"QV7141QF1T": "Xperia1"}
+        for i in adb.device_list():
+            serial = i.serial
+            data.append(
+                [
+                    dict_name.get(serial, serial),
+                    serial,
+                    self.DictDeviceStatus.get(serial, "未启动"),
+                    self.DictDevicesRunMode.get(serial, "pvp"),
+                    self.operate_button_widget,
+                    self.others_buttons_widget
+                ]
+            )
+        return data
 
     def operate_button_widget(self):
         button = QPushButton('启动')
@@ -170,13 +188,13 @@ class MainWindow(QMainWindow):
             client.stop()
             del self.dict_client[serial_no]
 
-    def write_table_demo(self, data):
+    def update_table_data(self, data):
         for item in data:
             row = self.ui.table_devices.rowCount()
             self.ui.table_devices.insertRow(row)
             for j, v in enumerate(item):
-                if "self." in v:
-                    self.ui.table_devices.setCellWidget(row, j, eval(v)())
+                if isinstance(v, type(self.update_table_data)):
+                    self.ui.table_devices.setCellWidget(row, j, v())
                 else:
                     v = QTableWidgetItem(v)
                     self.ui.table_devices.setItem(row, j, v)
