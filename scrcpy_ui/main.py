@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from adbutils import adb
 from PySide6 import QtCore  # QTranslator
-from PySide6.QtGui import QImage, QMouseEvent, QPixmap
+from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QCloseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -220,6 +220,11 @@ class MainWindow(QMainWindow):
                 else:
                     v = QTableWidgetItem(v)
                     self.ui.table_devices.setItem(row, j, v)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        for _, client in self.dict_client.items():
+            client.stop()
+        return super().closeEvent(event)
 
 
 def main():
