@@ -1,13 +1,22 @@
 import sys
-import scrcpy
+
 import numpy as np
 from adbutils import adb
+from PySide6 import QtCore  # QTranslator
+from PySide6.QtGui import QImage, QMouseEvent, QPixmap
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QHeaderView,
+    QMainWindow,
+    QPushButton,
+    QTableWidgetItem,
+    QWidget,
+)
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
-from PySide6.QtWidgets import QHeaderView, QAbstractItemView
-from PySide6 import QtCore # QTranslator
-from PySide6.QtGui import QImage, QPixmap, QMouseEvent
-
+import scrcpy
 
 from .ui_main import Ui_MainWindow
 from .ui_screen import Ui_Dialog

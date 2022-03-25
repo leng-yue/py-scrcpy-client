@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import time
 import threading
+import time
+
 from adbutils import adb
 
 from scrcpy import MutiClient
+
 
 class ThreadWorker(threading.Thread):   #继承父类threading.Thread
     def __init__(self, threadID, serialno):
