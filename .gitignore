@@ -61,3 +61,4 @@ target/
 adb
 
 pyside-setup/
+.DS_Store
