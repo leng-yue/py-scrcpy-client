@@ -187,6 +187,7 @@ class Client:
                 if not self.block_frame:
                     yield None
             except OSError as e:  # Socket Closed
+                print(e)
                 if self.alive:
                     self.alive = False
 
