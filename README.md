@@ -1,4 +1,4 @@
-# Python Scrcpy Client
+# Python MutiScrcpy Client
 <p>
     <a href="https://pypi.org/project/muti-scrcpy-client/" target="_blank">
         <img src="https://img.shields.io/pypi/v/muti-scrcpy-client" />
