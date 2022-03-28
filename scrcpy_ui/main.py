@@ -4,7 +4,7 @@ import numpy as np
 from adbutils import adb
 from PySide6 import QtCore  # QTranslator
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QImage, QMouseEvent, QPixmap, QCloseEvent
+from PySide6.QtGui import QCloseEvent, QImage, QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -28,7 +28,7 @@ app = QApplication([])
 
 class ScreenWindow(QDialog):
     signal_frame = Signal(np.ndarray)
-    
+
     def __init__(self, name="", serial_no="", *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not serial_no:
@@ -42,8 +42,8 @@ class ScreenWindow(QDialog):
         # # show
         # self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
 
-        # show 
-        
+        # show
+
         self.signal_frame.connect(self.on_frame)
         # Bind mouse event
         self.ui.label_video.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
@@ -53,7 +53,6 @@ class ScreenWindow(QDialog):
         self.setWindowTitle(QtCore.QCoreApplication.translate("Dialog", name, None))
         self.tworker = ThreadWorker(0, self.serial_no, self.signal_frame)
         self.show()
-        
 
     def on_frame(self, frame):
         app.processEvents()

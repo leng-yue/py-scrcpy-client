@@ -3,9 +3,9 @@
 import threading
 import time
 
+import numpy as np
 from adbutils import adb
 from loguru import logger
-import numpy as np
 
 from scrcpy import MutiClient
 
@@ -18,7 +18,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.signel = signel
 
         self.max_block_frame = 100
-        self.time_clean_block_list = 10 # s
+        self.time_clean_block_list = 10  # s
         self.list_block_frame_time = []
         self.device = adb.device(serial=serialno)
         self.client = MutiClient(device=self.device, block_frame=False, max_width=640)
@@ -37,11 +37,16 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                 if not self.list_block_frame_time:
                     self.list_block_frame_time.append(now)
                 elif len(self.list_block_frame_time) >= self.max_block_frame:
-                    logger.warning(f"max_block_frame out size: {self.list_block_frame_time}")
+                    logger.warning(
+                        f"max_block_frame out size: {self.list_block_frame_time}"
+                    )
                     self.list_block_frame_time = []
                 elif now - self.list_block_frame_time[-1] >= self.time_clean_block_list:
                     self.list_block_frame_time = []
-                elif now - self.list_block_frame_time[-1] < self.time_clean_block_list/10:
+                elif (
+                    now - self.list_block_frame_time[-1]
+                    < self.time_clean_block_list / 10
+                ):
                     self.list_block_frame_time.append(now)
 
     def stop(self):
