@@ -44,10 +44,10 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
-    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QMainWindow,
     QMenu,
@@ -79,16 +79,27 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.horizontalLayout_3.setContentsMargins(0, 16, -1, -1)
-        self.combobox_sort = QComboBox(self.centralwidget)
-        self.combobox_sort.setObjectName(u"combobox_sort")
-
-        self.horizontalLayout_3.addWidget(self.combobox_sort)
-
         self.horizontalSpacer = QSpacerItem(
             40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
         )
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer)
+
+        self.label_info_title = QLabel(self.centralwidget)
+        self.label_info_title.setObjectName(u"label_info_title")
+
+        self.horizontalLayout_3.addWidget(self.label_info_title)
+
+        self.label_info_content = QLabel(self.centralwidget)
+        self.label_info_content.setObjectName(u"label_info_content")
+
+        self.horizontalLayout_3.addWidget(self.label_info_content)
+
+        self.horizontalSpacer_3 = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
         self.input_search = QLineEdit(self.centralwidget)
         self.input_search.setObjectName(u"input_search")
@@ -105,8 +116,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.table_devices = QTableWidget(self.centralwidget)
-        if self.table_devices.columnCount() < 7:
-            self.table_devices.setColumnCount(7)
+        if self.table_devices.columnCount() < 6:
+            self.table_devices.setColumnCount(6)
         __qtablewidgetitem = QTableWidgetItem()
         self.table_devices.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
@@ -119,8 +130,6 @@ class Ui_MainWindow(object):
         self.table_devices.setHorizontalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
         self.table_devices.setHorizontalHeaderItem(5, __qtablewidgetitem5)
-        __qtablewidgetitem6 = QTableWidgetItem()
-        self.table_devices.setHorizontalHeaderItem(6, __qtablewidgetitem6)
         self.table_devices.setObjectName(u"table_devices")
 
         self.horizontalLayout.addWidget(self.table_devices)
@@ -183,6 +192,10 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(
             QCoreApplication.translate("MainWindow", u"About", None)
         )
+        self.label_info_title.setText(
+            QCoreApplication.translate("MainWindow", u"Info: ", None)
+        )
+        self.label_info_content.setText("")
         self.button_search.setText(
             QCoreApplication.translate("MainWindow", u"Search", None)
         )
@@ -196,18 +209,14 @@ class Ui_MainWindow(object):
         )
         ___qtablewidgetitem2 = self.table_devices.horizontalHeaderItem(3)
         ___qtablewidgetitem2.setText(
-            QCoreApplication.translate("MainWindow", u"Status", None)
+            QCoreApplication.translate("MainWindow", u"Run Mode", None)
         )
         ___qtablewidgetitem3 = self.table_devices.horizontalHeaderItem(4)
         ___qtablewidgetitem3.setText(
-            QCoreApplication.translate("MainWindow", u"Run Mode", None)
+            QCoreApplication.translate("MainWindow", u"Operate", None)
         )
         ___qtablewidgetitem4 = self.table_devices.horizontalHeaderItem(5)
         ___qtablewidgetitem4.setText(
-            QCoreApplication.translate("MainWindow", u"Operate", None)
-        )
-        ___qtablewidgetitem5 = self.table_devices.horizontalHeaderItem(6)
-        ___qtablewidgetitem5.setText(
             QCoreApplication.translate("MainWindow", u"Others", None)
         )
         self.checkbox_devices.setText(

@@ -1,103 +1,28 @@
 import sys
 from tabnanny import check
 
-import numpy as np
 from adbutils import adb
-from fastapi import FastAPI
-from PySide6 import QtCore  # QTranslator
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QCloseEvent, QImage, QMouseEvent, QPixmap
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QCheckBox,
-    QDialog,
+    QComboBox,
     QHBoxLayout,
-    QHeaderView,
     QMainWindow,
     QPushButton,
     QTableWidgetItem,
     QWidget,
 )
 
-import scrcpy
-
+from .config_edit import ConfigEditWindow
+from .schemas import runmode
+from .screen import ScreenWindow
 from .ui_main import Ui_MainWindow
-from .ui_screen import Ui_Dialog
 from .worker import ThreadWorker
 
 app = QApplication([])
-
-
-class ScreenWindow(QDialog):
-    signal_frame = Signal(np.ndarray)
-
-    def __init__(self, name, row, serial_no, signal_screen_close=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not serial_no:
-            return
-        self.signal_screen_close = signal_screen_close
-        self.row = row
-        self.serial_no = serial_no
-        self.ui = Ui_Dialog()
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  # 始终最前显示
-        self.ui.setupUi(self)
-
-        self.max_width = 640
-        self.serial_no = serial_no
-        # # show
-        # self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
-
-        # show
-        self.signal_frame.connect(self.on_frame)
-        # Bind mouse event
-        self.ui.label_video.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
-        self.ui.label_video.mouseMoveEvent = self.on_mouse_event(scrcpy.ACTION_MOVE)
-        self.ui.label_video.mouseReleaseEvent = self.on_mouse_event(scrcpy.ACTION_UP)
-
-        self.setWindowTitle(QtCore.QCoreApplication.translate("Dialog", name, None))
-        self.tworker = ThreadWorker(0, self.serial_no, self.signal_frame)
-        self.show()
-
-    def on_frame(self, frame):
-        app.processEvents()
-        # print("frame~~~~")
-        if frame is not None:
-            # ratio = self.max_width / max(self.client.resolution)
-            image = QImage(
-                frame,
-                frame.shape[1],
-                frame.shape[0],
-                frame.shape[1] * 3,
-                QImage.Format_BGR888,
-            )
-            pix = QPixmap(image)
-            # pix.setDevicePixelRatio(1 / ratio)
-            self.ui.label_video.setPixmap(pix)
-            self.resize(1, 1)
-
-    def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
-        def handler(evt: QMouseEvent):
-            focused_widget = QApplication.focusWidget()
-            if focused_widget is not None:
-                focused_widget.clearFocus()
-            ratio = self.max_width / max(self.tworker.client.resolution)
-            self.tworker.client.control.touch(
-                evt.position().x() - (self.ui.label_video.geometry().x() / 2) / ratio,
-                evt.position().y() - (self.ui.label_video.geometry().y() / 2) / ratio,
-                action,
-            )
-
-        return handler
-
-    def closeEvent(self, _):
-        print("close~~~~")
-        self.tworker.stop()
-        self.signal_screen_close.emit(self.row, self.serial_no)
-
-    # def showWindow(self):
-    #     print("移动", self.x(), self.y())
-    #     self.move(int(self.x()), int(self.y()))
 
 
 class MainWindow(QMainWindow):
@@ -120,14 +45,21 @@ class MainWindow(QMainWindow):
         self.ui.table_devices.setSelectionMode(
             QAbstractItemView.NoSelection
         )  # noSelection
-
-        self.DictDeviceStatus = {}
-        self.DictDevicesRunMode = {}
         self.dict_client = {}
-        self.dict_screen = {}
+        self.dict_window_screen = {}
+        self.dict_window_edit = {}
 
+        # UI Text Dict
+        self.dict_ui_text = {
+            "device_nick_name": {"QV7141QF1T": "Xperia1"},
+            "buttons": {
+                # 传入状态(运行时可关闭.关闭时可运行)
+                "operate": {1: "停止", -1: "启动"},
+                "show": {1: "关闭画面", -1: "显示画面"},
+            },
+        }
         self.dict_table_buttons = {}
-        self.dict_table_check_box = {}
+        self.dict_table_box = {"check": {}, "combo": {}}
         self.update_table_data(data=self.get_table_data())
 
         # close screnn window
@@ -136,16 +68,14 @@ class MainWindow(QMainWindow):
 
     def get_table_data(self):
         data = []
-        dict_name = {"QV7141QF1T": "Xperia1"}
         for i in adb.device_list():
             serial = i.serial
             data.append(
                 [
                     self.check_box_widget,
-                    dict_name.get(serial, serial),
+                    self.dict_ui_text["device_nick_name"].get(serial, serial),
                     serial,
-                    self.DictDeviceStatus.get(serial, "未启动"),
-                    self.DictDevicesRunMode.get(serial, "pvp"),
+                    "pvp",
                     self.operate_button_widget,
                     self.others_buttons_widget,
                 ]
@@ -158,13 +88,25 @@ class MainWindow(QMainWindow):
             self.dict_table_buttons[row] = {}
         self.dict_table_buttons[row].update(data)
 
-    def chg_button2table_dict(self, row, name, text):
+    def chg_button2table_dict(self, row, name, status):
         row_data = self.dict_table_buttons.get(row)
         if row_data:
-            row_data[name].setText(text)
+            if status > 0:
+                row_data[name].setStyleSheet(
+                    """ text-align : center;
+                        background-color : LightCoral;
+                        """
+                )
+            else:
+                row_data[name].setStyleSheet("")
+            row_data[name].setText(self.dict_ui_text["buttons"][name][status])
 
-    def add_box2table_dict(self, row, box_widget):
-        self.dict_table_check_box[row] = box_widget
+    def add_box2table_dict(self, row, name, box_widget):
+        """
+        保存 box 组建:
+        name str in( check, combo )
+        """
+        self.dict_table_box[name][row] = box_widget
 
     def chg_box2table_dict(self, row, reverse=True, sure=0, checkbox=None):
         """
@@ -173,7 +115,7 @@ class MainWindow(QMainWindow):
         sure: 1 勾选, -1 取消勾选
         """
         if row and not checkbox:
-            checkbox = self.dict_table_check_box.get(row)
+            checkbox = self.dict_table_box["check"].get(row)
         if reverse:
             _status = checkbox.isChecked()
             checkbox.setChecked(not _status)
@@ -183,13 +125,19 @@ class MainWindow(QMainWindow):
     # endregion
 
     # region 特殊Table 元素
+    def combo_box_widget(self, row):
+        combobox = QComboBox()
+        combobox.addItems(runmode.All)
+        self.add_box2table_dict(row, "combo", combobox)
+        return combobox
+
     def check_box_widget(self, row):
         checkbox = QCheckBox()
-        self.add_box2table_dict(row, checkbox)
+        self.add_box2table_dict(row, "check", checkbox)
         return checkbox
 
     def operate_button_widget(self, row):
-        button = QPushButton("启动")
+        button = QPushButton(self.dict_ui_text["buttons"]["operate"][-1])
         button.clicked.connect(self.on_click_operate)
         data = {"operate": button}
         self.add_button2table_dict(row, data)
@@ -199,24 +147,17 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         hlayout = QHBoxLayout()
         button_edit = QPushButton("编辑")
+        button_edit.clicked.connect(self.on_click_edit)
         button_edit.setStyleSheet(
             """ text-align : center;
-                                          background-color : NavajoWhite;
-                                          height : 30px;
-                                          border-style: outset;
-                                          font : 13px  """
+                background-color : NavajoWhite;
+                height : 30px;
+                border-style: outset;
+                font : 13px  """
         )
         button_cpy = QPushButton("复制")
         button_cpy.clicked.connect(self.on_click_cpy)
-        # button_del = QPushButton("删除")
-        # button_del.setStyleSheet(
-        #     """ text-align : center;
-        #                             background-color : LightCoral;
-        #                             height : 30px;
-        #                             border-style: outset;
-        #                             font : 13px; """
-        # )
-        button_show = QPushButton("显示画面")
+        button_show = QPushButton(self.dict_ui_text["buttons"]["show"][-1])
         button_show.clicked.connect(self.on_click_show)
         self.add_button2table_dict(
             row, {"edit": button_edit, "cpy": button_cpy, "show": button_show}
@@ -234,19 +175,19 @@ class MainWindow(QMainWindow):
     # region 事件处理
 
     def on_click_all_start(self):
-        for row, box in self.dict_table_check_box.items():
+        for row, box in self.dict_table_box["check"].items():
             row, _, serial_no = self.get_table_row_info(row)
             if box.isChecked() and not self.dict_client.get(serial_no):
                 self.on_click_operate(row=row, serial_no=serial_no)
 
     def on_click_all_stop(self):
-        for row, box in self.dict_table_check_box.items():
+        for row, box in self.dict_table_box["check"].items():
             row, _, serial_no = self.get_table_row_info(row)
             if box.isChecked() and self.dict_client.get(serial_no):
                 self.on_click_operate(row=row, serial_no=serial_no)
 
     def on_click_check_all(self):
-        for row, box in self.dict_table_check_box.items():
+        for row, box in self.dict_table_box["check"].items():
             if self.ui.checkbox_devices.isChecked():
                 self.chg_box2table_dict(row, sure=1, checkbox=box)
             else:
@@ -271,22 +212,31 @@ class MainWindow(QMainWindow):
                 row = self.ui.table_devices.indexAt(button.pos()).row()
             return self.get_table_row_info(row)
 
+    def on_click_edit(self):
+        row, name, serial_no = self.get_table_row_info_by_button(by_parent_pos=True)
+        win_edit = self.dict_window_edit.get(serial_no)
+        if not win_edit:
+            _win_edit = ConfigEditWindow(name, row, serial_no)
+            self.dict_window_edit[serial_no] = _win_edit
+        else:
+            win_edit.close()
+
     def on_click_cpy(self):
         pass
 
     def close_all_about_show(self, row, serial_no):
-        del self.dict_screen[serial_no]
-        self.chg_button2table_dict(row, "show", "显示画面")
+        del self.dict_window_screen[serial_no]
+        self.chg_button2table_dict(row, "show", -1)
 
     def on_click_show(self):
         row, name, serial_no = self.get_table_row_info_by_button(by_parent_pos=True)
-        win_screen = self.dict_screen.get(serial_no)
+        win_screen = self.dict_window_screen.get(serial_no)
         if not win_screen:
             _win_screen = ScreenWindow(name, row, serial_no, self.signal_screen_close)
-            self.dict_screen[serial_no] = _win_screen
-            self.dict_screen[serial_no].tworker.start()
-            self.chg_button2table_dict(row, "show", "关闭画面")
-            # self.dict_screen[serial_no].showWindow()
+            self.dict_window_screen[serial_no] = _win_screen
+            self.dict_window_screen[serial_no].tworker.start()
+            self.chg_button2table_dict(row, "show", 1)
+            # self.dict_window_screen[serial_no].showWindow()
         else:
             win_screen.close()
             # self.close_all_about_show(row, serial_no)
@@ -303,15 +253,15 @@ class MainWindow(QMainWindow):
             tworker = ThreadWorker(row, serial_no)
             self.dict_client[serial_no] = tworker
             self.dict_client[serial_no].start()
-            self.chg_button2table_dict(row, "operate", "停止")
+            self.chg_button2table_dict(row, "operate", 1)
         else:
             client.stop()
             del self.dict_client[serial_no]
-            self.chg_button2table_dict(row, "operate", "启动")
+            self.chg_button2table_dict(row, "operate", -1)
 
     def update_table_data(self, data):
         self.dict_table_buttons = {}
-        self.dict_table_check_box = {}
+        self.dict_table_box = {"check": {}, "combo": {}}
         for item in data:
             row = self.ui.table_devices.rowCount()
             self.ui.table_devices.insertRow(row)

@@ -29,10 +29,34 @@
          <number>16</number>
         </property>
         <item>
-         <widget class="QComboBox" name="combobox_sort"/>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
+         <widget class="QLabel" name="label_info_title">
+          <property name="text">
+           <string>Info: </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_info_content">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -62,7 +86,7 @@
          <widget class="QTableWidget" name="table_devices">
           <column>
            <property name="text">
-            <string> </string>
+            <string/>
            </property>
           </column>
           <column>
@@ -73,11 +97,6 @@
           <column>
            <property name="text">
             <string>Serial Number</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Status</string>
            </property>
           </column>
           <column>
