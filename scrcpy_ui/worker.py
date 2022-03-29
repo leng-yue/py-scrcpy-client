@@ -28,10 +28,10 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
             if self.stop_flag:
                 return
             if isinstance(frame, np.ndarray):
-                print(frame.shape, "TODO -> Need Server.")
                 if self.signel:
                     self.signel.emit(frame)
-                pass
+                else:
+                    print(frame.shape, "TODO -> Need Server.")
             else:
                 now = time.time()
                 if not self.list_block_frame_time:
