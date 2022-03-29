@@ -1,15 +1,16 @@
 import sys
 from tabnanny import check
-from fastapi import FastAPI
 
 import numpy as np
 from adbutils import adb
+from fastapi import FastAPI
 from PySide6 import QtCore  # QTranslator
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QCloseEvent, QImage, QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QDialog,
     QHBoxLayout,
     QHeaderView,
@@ -17,7 +18,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidgetItem,
     QWidget,
-    QCheckBox,
 )
 
 import scrcpy
@@ -31,7 +31,6 @@ app = QApplication([])
 
 class ScreenWindow(QDialog):
     signal_frame = Signal(np.ndarray)
-    
 
     def __init__(self, name, row, serial_no, signal_screen_close=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -130,7 +129,7 @@ class MainWindow(QMainWindow):
         self.dict_table_buttons = {}
         self.dict_table_check_box = {}
         self.update_table_data(data=self.get_table_data())
-        
+
         # close screnn window
         self.signal_screen_close.connect(self.close_all_about_show)
         self.show()
@@ -158,12 +157,15 @@ class MainWindow(QMainWindow):
         if not self.dict_table_buttons.get(row):
             self.dict_table_buttons[row] = {}
         self.dict_table_buttons[row].update(data)
+
     def chg_button2table_dict(self, row, name, text):
         row_data = self.dict_table_buttons.get(row)
         if row_data:
             row_data[name].setText(text)
+
     def add_box2table_dict(self, row, box_widget):
         self.dict_table_check_box[row] = box_widget
+
     def chg_box2table_dict(self, row, reverse=True, sure=0, checkbox=None):
         """
         修改checkbox 状态
@@ -172,12 +174,13 @@ class MainWindow(QMainWindow):
         """
         if row and not checkbox:
             checkbox = self.dict_table_check_box.get(row)
-        if reverse :
+        if reverse:
             _status = checkbox.isChecked()
             checkbox.setChecked(not _status)
         elif sure:
             checkbox.setChecked(sure > 0)
-    #endregion
+
+    # endregion
 
     # region 特殊Table 元素
     def check_box_widget(self, row):
@@ -188,9 +191,7 @@ class MainWindow(QMainWindow):
     def operate_button_widget(self, row):
         button = QPushButton("启动")
         button.clicked.connect(self.on_click_operate)
-        data = {
-            "operate": button
-        }
+        data = {"operate": button}
         self.add_button2table_dict(row, data)
         return button
 
@@ -217,7 +218,9 @@ class MainWindow(QMainWindow):
         # )
         button_show = QPushButton("显示画面")
         button_show.clicked.connect(self.on_click_show)
-        self.add_button2table_dict(row, {"edit": button_edit, "cpy": button_cpy, "show": button_show})
+        self.add_button2table_dict(
+            row, {"edit": button_edit, "cpy": button_cpy, "show": button_show}
+        )
         hlayout.addWidget(button_edit)
         hlayout.addWidget(button_cpy)
         # hlayout.addWidget(button_del)
@@ -225,15 +228,17 @@ class MainWindow(QMainWindow):
         hlayout.setContentsMargins(5, 2, 5, 2)
         widget.setLayout(hlayout)
         return widget
-    #endregion
+
+    # endregion
 
     # region 事件处理
-    
+
     def on_click_all_start(self):
         for row, box in self.dict_table_check_box.items():
             row, _, serial_no = self.get_table_row_info(row)
             if box.isChecked() and not self.dict_client.get(serial_no):
                 self.on_click_operate(row=row, serial_no=serial_no)
+
     def on_click_all_stop(self):
         for row, box in self.dict_table_check_box.items():
             row, _, serial_no = self.get_table_row_info(row)
@@ -272,6 +277,7 @@ class MainWindow(QMainWindow):
     def close_all_about_show(self, row, serial_no):
         del self.dict_screen[serial_no]
         self.chg_button2table_dict(row, "show", "显示画面")
+
     def on_click_show(self):
         row, name, serial_no = self.get_table_row_info_by_button(by_parent_pos=True)
         win_screen = self.dict_screen.get(serial_no)
@@ -321,7 +327,9 @@ class MainWindow(QMainWindow):
         for _, client in self.dict_client.items():
             client.stop()
         return super().closeEvent(event)
-    #endregion
+
+    # endregion
+
 
 def main():
     # dialog = LoginDialog()
