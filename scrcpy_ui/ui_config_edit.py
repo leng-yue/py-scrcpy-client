@@ -59,7 +59,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(400, 300)
+        Dialog.resize(400, 305)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.combobox_run_mode = QComboBox(Dialog)
@@ -132,10 +132,10 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_6, 8, 1, 1, 1)
 
-        self.lineEdit = QLineEdit(Dialog)
-        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineedit_nickname = QLineEdit(Dialog)
+        self.lineedit_nickname.setObjectName(u"lineedit_nickname")
 
-        self.gridLayout.addWidget(self.lineEdit, 8, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineedit_nickname, 8, 3, 1, 1)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)

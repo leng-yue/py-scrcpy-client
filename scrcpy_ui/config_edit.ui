@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>305</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -107,7 +107,7 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item row="8" column="3">
-    <widget class="QLineEdit" name="lineEdit"/>
+    <widget class="QLineEdit" name="lineedit_nickname"/>
    </item>
   </layout>
  </widget>

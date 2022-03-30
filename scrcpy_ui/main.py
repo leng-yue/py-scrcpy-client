@@ -27,6 +27,7 @@ app = QApplication([])
 
 class MainWindow(QMainWindow):
     signal_screen_close = Signal(int, str)
+    signal_config_edit_close = Signal(int, str)
 
     def __init__(self, account_info=None):
         super(MainWindow, self).__init__()
@@ -51,11 +52,15 @@ class MainWindow(QMainWindow):
 
         # UI Text Dict
         self.dict_ui_text = {
-            "device_nick_name": {"QV7141QF1T": "Xperia1"},
+            "device_nick_name": {
+                "QV7141QF1T": "Xperia1",
+                "9LJZQCJFCYUWAM7S": "测试神机001",
+            },
             "buttons": {
                 # 传入状态(运行时可关闭.关闭时可运行)
                 "operate": {1: "停止", -1: "启动"},
                 "show": {1: "关闭画面", -1: "显示画面"},
+                "edit": {1: "取消编辑", -1: "编辑"},
             },
         }
         self.dict_table_buttons = {}
@@ -64,6 +69,7 @@ class MainWindow(QMainWindow):
 
         # close screnn window
         self.signal_screen_close.connect(self.close_all_about_show)
+        self.signal_config_edit_close.connect(self.close_all_about_edit_show)
         self.show()
 
     def get_table_data(self):
@@ -80,6 +86,16 @@ class MainWindow(QMainWindow):
                     self.others_buttons_widget,
                 ]
             )
+        data.append(
+            [
+                self.check_box_widget,
+                "常驻测试",
+                "niubideyipi_000",
+                "pvp",
+                self.operate_button_widget,
+                self.others_buttons_widget,
+            ]
+        )
         return data
 
     # region widgets数据缓存
@@ -148,24 +164,22 @@ class MainWindow(QMainWindow):
         hlayout = QHBoxLayout()
         button_edit = QPushButton("编辑")
         button_edit.clicked.connect(self.on_click_edit)
-        button_edit.setStyleSheet(
-            """ text-align : center;
-                background-color : NavajoWhite;
-                height : 30px;
-                border-style: outset;
-                font : 13px  """
-        )
-        button_cpy = QPushButton("复制")
-        button_cpy.clicked.connect(self.on_click_cpy)
+        # button_edit.setStyleSheet(
+        #     """ text-align : center;
+        #         background-color : NavajoWhite;
+        #         height : 30px;
+        #         border-style: outset;
+        #         font : 13px  """
+        # )
+        # button_cpy = QPushButton("复制")
+        # button_cpy.clicked.connect(self.on_click_cpy)
         button_show = QPushButton(self.dict_ui_text["buttons"]["show"][-1])
         button_show.clicked.connect(self.on_click_show)
-        self.add_button2table_dict(
-            row, {"edit": button_edit, "cpy": button_cpy, "show": button_show}
-        )
         hlayout.addWidget(button_edit)
-        hlayout.addWidget(button_cpy)
+        # hlayout.addWidget(button_cpy)
         # hlayout.addWidget(button_del)
         hlayout.addWidget(button_show)
+        self.add_button2table_dict(row, {"edit": button_edit, "show": button_show})
         hlayout.setContentsMargins(5, 2, 5, 2)
         widget.setLayout(hlayout)
         return widget
@@ -215,14 +229,21 @@ class MainWindow(QMainWindow):
     def on_click_edit(self):
         row, name, serial_no = self.get_table_row_info_by_button(by_parent_pos=True)
         win_edit = self.dict_window_edit.get(serial_no)
+        self.chg_button2table_dict(row, "edit", 1)
         if not win_edit:
-            _win_edit = ConfigEditWindow(name, row, serial_no)
+            _win_edit = ConfigEditWindow(
+                name, row, serial_no, self.signal_config_edit_close
+            )
             self.dict_window_edit[serial_no] = _win_edit
         else:
             win_edit.close()
 
-    def on_click_cpy(self):
-        pass
+    # def on_click_cpy(self):
+    #     pass
+
+    def close_all_about_edit_show(self, row, serial_no):
+        del self.dict_window_edit[serial_no]
+        self.chg_button2table_dict(row, "edit", -1)
 
     def close_all_about_show(self, row, serial_no):
         del self.dict_window_screen[serial_no]
