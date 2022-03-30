@@ -44,10 +44,10 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
-    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QMainWindow,
     QMenu,
@@ -79,16 +79,27 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.horizontalLayout_3.setContentsMargins(0, 16, -1, -1)
-        self.combobox_sort = QComboBox(self.centralwidget)
-        self.combobox_sort.setObjectName(u"combobox_sort")
-
-        self.horizontalLayout_3.addWidget(self.combobox_sort)
-
         self.horizontalSpacer = QSpacerItem(
             40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
         )
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer)
+
+        self.label_info_title = QLabel(self.centralwidget)
+        self.label_info_title.setObjectName(u"label_info_title")
+
+        self.horizontalLayout_3.addWidget(self.label_info_title)
+
+        self.label_info_content = QLabel(self.centralwidget)
+        self.label_info_content.setObjectName(u"label_info_content")
+
+        self.horizontalLayout_3.addWidget(self.label_info_content)
+
+        self.horizontalSpacer_3 = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
+
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
 
         self.input_search = QLineEdit(self.centralwidget)
         self.input_search.setObjectName(u"input_search")
@@ -132,15 +143,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.checkbox_devices)
 
-        self.button_all_stop = QPushButton(self.centralwidget)
-        self.button_all_stop.setObjectName(u"button_all_stop")
-
-        self.horizontalLayout_2.addWidget(self.button_all_stop)
-
         self.button_all_satrt = QPushButton(self.centralwidget)
         self.button_all_satrt.setObjectName(u"button_all_satrt")
 
         self.horizontalLayout_2.addWidget(self.button_all_satrt)
+
+        self.button_all_stop = QPushButton(self.centralwidget)
+        self.button_all_stop.setObjectName(u"button_all_stop")
+
+        self.horizontalLayout_2.addWidget(self.button_all_stop)
 
         self.horizontalSpacer_2 = QSpacerItem(
             40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
@@ -181,41 +192,41 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(
             QCoreApplication.translate("MainWindow", u"About", None)
         )
+        self.label_info_title.setText(
+            QCoreApplication.translate("MainWindow", u"Info: ", None)
+        )
+        self.label_info_content.setText("")
         self.button_search.setText(
             QCoreApplication.translate("MainWindow", u"Search", None)
         )
-        ___qtablewidgetitem = self.table_devices.horizontalHeaderItem(0)
+        ___qtablewidgetitem = self.table_devices.horizontalHeaderItem(1)
         ___qtablewidgetitem.setText(
             QCoreApplication.translate("MainWindow", u"Device", None)
         )
-        ___qtablewidgetitem1 = self.table_devices.horizontalHeaderItem(1)
+        ___qtablewidgetitem1 = self.table_devices.horizontalHeaderItem(2)
         ___qtablewidgetitem1.setText(
             QCoreApplication.translate("MainWindow", u"Serial Number", None)
         )
-        ___qtablewidgetitem2 = self.table_devices.horizontalHeaderItem(2)
+        ___qtablewidgetitem2 = self.table_devices.horizontalHeaderItem(3)
         ___qtablewidgetitem2.setText(
-            QCoreApplication.translate("MainWindow", u"Status", None)
-        )
-        ___qtablewidgetitem3 = self.table_devices.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(
             QCoreApplication.translate("MainWindow", u"Run Mode", None)
         )
-        ___qtablewidgetitem4 = self.table_devices.horizontalHeaderItem(4)
-        ___qtablewidgetitem4.setText(
+        ___qtablewidgetitem3 = self.table_devices.horizontalHeaderItem(4)
+        ___qtablewidgetitem3.setText(
             QCoreApplication.translate("MainWindow", u"Operate", None)
         )
-        ___qtablewidgetitem5 = self.table_devices.horizontalHeaderItem(5)
-        ___qtablewidgetitem5.setText(
+        ___qtablewidgetitem4 = self.table_devices.horizontalHeaderItem(5)
+        ___qtablewidgetitem4.setText(
             QCoreApplication.translate("MainWindow", u"Others", None)
         )
         self.checkbox_devices.setText(
             QCoreApplication.translate("MainWindow", u"CheckAll", None)
         )
-        self.button_all_stop.setText(
-            QCoreApplication.translate("MainWindow", u"All Stop", None)
-        )
         self.button_all_satrt.setText(
             QCoreApplication.translate("MainWindow", u"All Start", None)
+        )
+        self.button_all_stop.setText(
+            QCoreApplication.translate("MainWindow", u"All Stop", None)
         )
         self.pushButton.setText(
             QCoreApplication.translate("MainWindow", u"Setting", None)

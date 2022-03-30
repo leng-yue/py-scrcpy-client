@@ -29,10 +29,34 @@
          <number>16</number>
         </property>
         <item>
-         <widget class="QComboBox" name="combobox_sort"/>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
+         <widget class="QLabel" name="label_info_title">
+          <property name="text">
+           <string>Info: </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_info_content">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -62,17 +86,17 @@
          <widget class="QTableWidget" name="table_devices">
           <column>
            <property name="text">
+            <string/>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Device</string>
            </property>
           </column>
           <column>
            <property name="text">
             <string>Serial Number</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Status</string>
            </property>
           </column>
           <column>
@@ -104,16 +128,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="button_all_stop">
+         <widget class="QPushButton" name="button_all_satrt">
           <property name="text">
-           <string>All Stop</string>
+           <string>All Start</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="button_all_satrt">
+         <widget class="QPushButton" name="button_all_stop">
           <property name="text">
-           <string>All Start</string>
+           <string>All Stop</string>
           </property>
          </widget>
         </item>
