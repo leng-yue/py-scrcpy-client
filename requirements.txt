@@ -1,2 +1,6 @@
 PySide6
 loguru
+pydantic
+flake8
+black
+isort
