@@ -10,13 +10,4 @@ class RunMode(BaseModel):
     All: List[str]
 
 
-class ServerInfo(BaseModel):
-    host: str
-    port: int
-    server: socket = None
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 runmode = RunMode(Pvp="pvp", Earning="earning", All=["pvp", "earning"])

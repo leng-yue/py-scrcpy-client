@@ -16,8 +16,9 @@ from PySide6.QtWidgets import (
 )
 
 from workers import ThreadWorker, UDPServer
+from workers.schemas import ServerInfo
 
-from .schemas import ServerInfo, runmode
+from .schemas import runmode
 from .ui_main import Ui_MainWindow
 from .window_config_edit import ConfigEditWindow
 from .window_screen import ScreenWindow
