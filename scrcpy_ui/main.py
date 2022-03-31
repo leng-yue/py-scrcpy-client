@@ -1,5 +1,5 @@
+import os
 import sys
-from tabnanny import check
 
 from adbutils import adb
 from PySide6.QtCore import Signal
@@ -72,6 +72,12 @@ class MainWindow(QMainWindow):
         self.signal_config_edit_close.connect(self.close_all_about_edit_show)
         self.show()
 
+    def get_device_nick_name(self, serial):
+        data = ConfigEditWindow.get_config_info_from_file(
+            os.path.join(ConfigEditWindow.root_dir, serial)
+        )
+        return data.get("nickname") if data else ""
+
     def get_table_data(self):
         data = []
         for i in adb.device_list():
@@ -79,7 +85,7 @@ class MainWindow(QMainWindow):
             data.append(
                 [
                     self.check_box_widget,
-                    self.dict_ui_text["device_nick_name"].get(serial, serial),
+                    self.get_device_nick_name(serial=serial),
                     serial,
                     "pvp",
                     self.operate_button_widget,
@@ -90,9 +96,9 @@ class MainWindow(QMainWindow):
             [
                 self.check_box_widget,
                 "常驻测试",
-                "niubideyipi_000",
+                "fake_device",
                 "pvp",
-                self.operate_button_widget,
+                "无法启动",
                 self.others_buttons_widget,
             ]
         )

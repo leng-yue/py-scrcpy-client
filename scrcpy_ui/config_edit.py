@@ -1,3 +1,8 @@
+"""
+About UI
+    In this file, everyone can be adjusted according to your own needs.
+    But should't submit changed code.
+"""
 import json
 import os
 
@@ -9,6 +14,8 @@ from .ui_config_edit import Ui_Dialog
 
 
 class ConfigEditWindow(QDialog):
+    root_dir = ".config"
+
     def __init__(
         self, name, row, serial_no, signal_config_edit_close=None, *args, **kwargs
     ):
@@ -27,7 +34,6 @@ class ConfigEditWindow(QDialog):
         # self.ui.buttonBox.accepted.connect(self.save_config_info)
         # self.ui.buttonBox.rejected.connect(self.cancel_config_info)
 
-        self.root_dir = ".config"
         self.make_config_file_sure()
         for i in [
             self.ui.combobox_ai_level,
@@ -38,11 +44,20 @@ class ConfigEditWindow(QDialog):
         self.show_config_info()
         self.show()
 
-    def make_config_file_sure(self):
-        if os.path.exists(self.root_dir):
+    @staticmethod
+    def make_config_file_sure():
+        if os.path.exists(ConfigEditWindow.root_dir):
             pass
         else:
-            os.mkdir(self.root_dir)
+            os.mkdir(ConfigEditWindow.root_dir)
+
+    @staticmethod
+    def get_config_info_from_file(path):
+        data = {}
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                data = json.load(f)
+        return data
 
     def get_confg_info(self):
         """
@@ -70,17 +85,14 @@ class ConfigEditWindow(QDialog):
 
     def show_config_info(self):
         path = os.path.join(self.root_dir, self.serial_no)
-        if not os.path.exists(path):
-            return
-        with open(path, "r") as f:
-            data = json.load(f)
-            if data:
-                self.set_combobox(self.ui.combobox_team, data["team"])
-                self.set_combobox(self.ui.combobox_ai_level, data["ai_level"])
-                self.set_combobox(self.ui.combobox_run_mode, data["run_mode"])
-                self.ui.lineedit_axie_ids.setText(data["axie_ids"])
-                self.ui.lineedit_nickname.setText(data["nickname"])
-                self.ui.textedit_ronin.setText(data["ronin_addr"])
+        data = self.get_config_info_from_file(path)
+        if data:
+            self.set_combobox(self.ui.combobox_team, data["team"])
+            self.set_combobox(self.ui.combobox_ai_level, data["ai_level"])
+            self.set_combobox(self.ui.combobox_run_mode, data["run_mode"])
+            self.ui.lineedit_axie_ids.setText(data["axie_ids"])
+            self.ui.lineedit_nickname.setText(data["nickname"])
+            self.ui.textedit_ronin.setText(data["ronin_addr"])
 
     def accept(self):
         print("I'm alive!!!!!")

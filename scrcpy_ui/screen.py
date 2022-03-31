@@ -71,6 +71,10 @@ class ScreenWindow(QDialog):
 
         return handler
 
+    def reject(self):
+        print("reject~&close~")
+        self.close()
+
     def closeEvent(self, _):
         print("close~~~~")
         self.tworker.stop()
