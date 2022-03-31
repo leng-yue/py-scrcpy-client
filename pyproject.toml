@@ -8,6 +8,7 @@ repository = "https://github.com/IanVzs/py-muti-scrcpy"
 license = "MIT"
 packages = [
     { include = "scrcpy" },
+    { include = "workers" },
     { include = "scrcpy_ui" },
 ]
 

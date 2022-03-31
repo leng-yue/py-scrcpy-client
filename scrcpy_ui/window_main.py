@@ -1,4 +1,5 @@
 import os
+from multiprocessing import Process
 
 from adbutils import adb
 from PySide6.QtCore import Signal
@@ -14,11 +15,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .schemas import runmode
+from workers import ThreadWorker, UDPServer
+
+from .schemas import ServerInfo, runmode
 from .ui_main import Ui_MainWindow
 from .window_config_edit import ConfigEditWindow
 from .window_screen import ScreenWindow
-from .worker import ThreadWorker
 
 
 class MainWindow(QMainWindow):
@@ -29,7 +31,12 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
+        # sub process
+        self.serverinfo = ServerInfo(host="127.0.0.1", port=9090)
+        self.subprocess = Process(
+            target=UDPServer().run, args=(self.serverinfo.host, self.serverinfo.port)
+        )
+        self.subprocess.start()
         # bind events
         self.ui.checkbox_devices.clicked.connect(self.on_click_check_all)
         self.ui.button_all_satrt.clicked.connect(self.on_click_all_start)
@@ -269,7 +276,7 @@ class MainWindow(QMainWindow):
             row, _, serial_no = self.get_table_row_info_by_button()
         client = self.dict_client.get(serial_no)
         if not client:
-            tworker = ThreadWorker(row, serial_no)
+            tworker = ThreadWorker(row, serial_no, serverinfo=self.serverinfo)
             self.dict_client[serial_no] = tworker
             self.dict_client[serial_no].start()
             self.chg_button2table_dict(row, "operate", 1)
@@ -295,6 +302,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         for _, client in self.dict_client.items():
             client.stop()
+        self.subprocess.kill()
         return super().closeEvent(event)
 
     # endregion

@@ -5,9 +5,9 @@ from PySide6.QtGui import QImage, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QDialog
 
 import scrcpy
+from workers import ThreadWorker
 
 from .ui_screen import Ui_Dialog
-from .worker import ThreadWorker
 
 
 class ScreenWindow(QDialog):
@@ -37,7 +37,7 @@ class ScreenWindow(QDialog):
         self.ui.label_video.mouseReleaseEvent = self.on_mouse_event(scrcpy.ACTION_UP)
 
         self.setWindowTitle(QtCore.QCoreApplication.translate("Dialog", name, None))
-        self.tworker = ThreadWorker(0, self.serial_no, self.signal_frame)
+        self.tworker = ThreadWorker(0, self.serial_no, signal=self.signal_frame)
         self.show()
 
     def on_frame(self, frame):

@@ -1,13 +1,8 @@
 from socket import socket
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
-
-class RunMode(BaseModel):
-    Pvp: str
-    Earning: str
-    All: List[str]
+# from typing import Dict, List, Optional
 
 
 class ServerInfo(BaseModel):
@@ -17,6 +12,3 @@ class ServerInfo(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
-
-runmode = RunMode(Pvp="pvp", Earning="earning", All=["pvp", "earning"])
