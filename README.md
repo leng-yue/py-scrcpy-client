@@ -27,7 +27,7 @@ Note: This gif is compressed and experience lower quality than actual.
 ## How to use
 To begin with, you need to install this package via pip:
 ```shell
-pip install muti-scrcpy-client[ui]
+pip install "muti-scrcpy-client[ui]"
 ```
 Then, you can start `py-muti-scrcpy` to view the demo:
 
