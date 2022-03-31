@@ -19,11 +19,11 @@ python = ">=3.7,<3.10"
 av = "^8.0.3"
 opencv-python = "^4.5.3"
 adbutils = "^0.11.0"
-pydantic = "*"
 
 # Optional dependencies for ui
 click = { version = "^7.0.0", optional = true }
 PySide6 = { version = "^6.0.0", optional = true }
+pydantic = "^1.9.0"
 
 [tool.poetry.extras]
 ui = ["click", "PySide6"]
