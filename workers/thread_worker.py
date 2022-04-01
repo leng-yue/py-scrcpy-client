@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import socket
+import struct
 import threading
 import time
 
@@ -11,8 +12,8 @@ from PySide6.QtCore import Signal
 
 from scrcpy import MutiClient
 
-from .schemas import ServerInfo
-
+from .utils import imencode, imdecode
+from .schemas import RspInfo, ServerInfo
 
 class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
     def __init__(
@@ -37,12 +38,35 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
 
     def get_server(self, serverinfo: ServerInfo):
         serverinfo.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        serverinfo.server.setblocking(0)
         return serverinfo
 
-    def encode_content(self, data):
-        if isinstance(data, str):
-            return data.encode()
-        return
+    def udp_split_send(self, img):
+        bimg = imencode(img)
+        len_img = len(bimg)
+        fhead = struct.pack('l', len_img)
+        self.serverinfo.server.sendto(fhead, (self.serverinfo.host, self.serverinfo.port))
+        for i in range(len(bimg) // 1024 + 1):
+            if 1024 * (i+1) > len_img:
+                segment = bimg[1024*i: ]
+                self.serverinfo.server.sendto(
+                    segment,
+                    (self.serverinfo.host, self.serverinfo.port),
+                )
+            else:
+                segment = bimg[1024*i: 1024*(i+1)]
+                self.serverinfo.server.sendto(
+                    segment,
+                    (self.serverinfo.host, self.serverinfo.port),
+                )
+        print(f"> send udp 2 {self.serverinfo.host}:{self.serverinfo.port}")
+
+    def get_udp_recv(self):
+        try:
+            resp = self.serverinfo.server.recv(100)
+            return RspInfo.decode(resp)
+        except BlockingIOError:
+            return None
 
     def run(self):
         for frame in self.client.start():
@@ -52,13 +76,12 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                 if self.signal:
                     self.signal.emit(frame)
                 else:
-                    self.serverinfo.server.sendto(
-                        self.encode_content("hello. Wakeup and goto work!"),
-                        (self.serverinfo.host, self.serverinfo.port),
-                    )
-                    print(f"> send udp 2 {self.serverinfo.host}:{self.serverinfo.port}")
-                    rst = self.serverinfo.server.recv(100)
-                    print(f"< recv udp recall !!!!! {rst}")
+                    self.udp_split_send(img=frame)
+                    rst = self.get_udp_recv()
+                    if rst:
+                        print(f"< recv udp recall !!!!! {rst}")
+                    else:
+                        print("fuck!")
             else:
                 now = time.time()
                 if not self.list_block_frame_time:
