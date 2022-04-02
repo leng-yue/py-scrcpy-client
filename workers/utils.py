@@ -1,19 +1,34 @@
 """
 公共方法
 """
-import struct
-import cv2
-import signal
 import functools
+import signal
+import struct
+
+import cv2
 import numpy as np
 from loguru import logger
 
-def unpack_split(bdata):
-    if len(bdata) < 30 and b"___" in bdata:
-        len_img, serialno = bdata.split(b"___")
-        return len_img.decode(), serialno.decode()
-    else:
-        return 0, ''
+
+class StructPack:
+    HeadLenth = 28
+
+    @staticmethod
+    def struct_pack(len_data, serialno):
+        pack = struct.pack("l20s", len_data, serialno.encode())
+        len_pack = len(pack)
+        if len_pack != StructPack.HeadLenth:
+            return 0, b""
+        return len_pack, pack
+
+    @staticmethod
+    def struct_unpack(bdata) -> tuple([int, str]):
+        unpack = struct.unpack("l20s", bdata[: StructPack.HeadLenth])
+        len_data = unpack[0]
+        serialno = unpack[1].replace(b"\x00", b"").decode()
+        serialno = serialno
+        return len_data, serialno
+
 
 def unpack(format, bdata):
     """
@@ -26,10 +41,12 @@ def unpack(format, bdata):
         except:
             pass
 
+
 def imencode(img) -> bytes:
     ext = ".png"
     sign, uint8img = cv2.imencode(ext=ext, img=img)
-    return uint8img.tobytes() if sign else b''
+    return uint8img.tobytes() if sign else b""
+
 
 def imdecode(buint8img) -> np.ndarray:
     img = None
@@ -40,13 +57,15 @@ def imdecode(buint8img) -> np.ndarray:
         logger.warning(err)
     return img
 
+
 def timeout(sec):
     """
     timeout decorator
     Waring: signal only works in main thread of the main interpreter
-    
+
     :sec int
     """
+
     def decorator(func):
         @functools.wraps(func)
         def wrapped_func(*args, **kwargs):
@@ -61,5 +80,7 @@ def timeout(sec):
             finally:
                 signal.alarm(0)
             return rst
+
         return wrapped_func
+
     return decorator

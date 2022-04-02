@@ -12,8 +12,9 @@ from PySide6.QtCore import Signal
 
 from scrcpy import MutiClient
 
-from .utils import imencode, imdecode
 from .schemas import RspInfo, ServerInfo
+from .utils import StructPack, imencode
+
 
 class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
     def __init__(
@@ -33,6 +34,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.max_block_frame = 100
         self.time_clean_block_list = 10  # s
         self.list_block_frame_time = []
+        self.serialno = serialno
         self.device = adb.device(serial=serialno)
         self.client = MutiClient(device=self.device, block_frame=False, max_width=640)
 
@@ -44,19 +46,28 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
     def udp_split_send(self, img):
         bimg = imencode(img)
         len_img = len(bimg)
-        fhead = struct.pack('l', len_img)
-        self.serverinfo.server.sendto(fhead, (self.serverinfo.host, self.serverinfo.port))
-        for i in range(len(bimg) // 1024 + 1):
-            if 1024 * (i+1) > len_img:
-                segment = bimg[1024*i: ]
+
+        len_fhead, fhead = StructPack.struct_pack(
+            len_data=len_img, serialno=self.serialno
+        )
+        if not len_fhead or self.serverinfo.server is None:
+            logger.error("udp send error: pack error")
+            return
+        self.serverinfo.server.sendto(
+            fhead, (self.serverinfo.host, self.serverinfo.port)
+        )
+
+        for i in range(len(bimg) // (1024 - len_fhead) + 1):
+            if (1024 - len_fhead) * (i + 1) > len_img:
+                segment = bimg[(1024 - len_fhead) * i :]
                 self.serverinfo.server.sendto(
-                    segment,
+                    (fhead + segment),
                     (self.serverinfo.host, self.serverinfo.port),
                 )
             else:
-                segment = bimg[1024*i: 1024*(i+1)]
+                segment = bimg[(1024 - len_fhead) * i : (1024 - len_fhead) * (i + 1)]
                 self.serverinfo.server.sendto(
-                    segment,
+                    (fhead + segment),
                     (self.serverinfo.host, self.serverinfo.port),
                 )
         print(f"> send udp 2 {self.serverinfo.host}:{self.serverinfo.port}")
