@@ -23,7 +23,10 @@ class UDPServer:
         cv2.waitKey(1)
         time.sleep(0.01)
         # endregion
-        resp = RspInfo(utime=int(time.time()), rst={"msg": "ok", "action": None})
+        resp = RspInfo(
+            utime=int(time.time()),
+            rst={"msg": "ok", "action": None, "seriano": seriano},
+        )
         self.server.sendto(resp.encode(), addr)
 
     def run(self, host: str, port: int):

@@ -90,7 +90,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                     self.udp_split_send(img=frame)
                     rst = self.get_udp_recv()
                     if rst:
-                        print(f"< recv udp recall !!!!! {rst}")
+                        print(f"< recv{self.serialno} udp recall !!!!! {rst}")
                     else:
                         print("fuck!")
             else:
