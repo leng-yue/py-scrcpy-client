@@ -36,11 +36,9 @@
 <span class="kn">import</span> <span class="nn">struct</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BufferedIOBase</span><span class="p">,</span> <span class="n">BytesIO</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">av</span>
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">_AdbStreamConnection</span><span class="p">,</span> <span class="n">adb</span>
@@ -145,34 +143,34 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deploy server to android device</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">server_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
-        <span class="n">server_file_path</span> <span class="o">=</span> <span class="n">server_root</span> <span class="o">+</span> <span class="s2">&quot;/scrcpy-server.jar&quot;</span>
+        <span class="n">jar_name</span> <span class="o">=</span> <span class="s2">&quot;scrcpy-server-v1.24.jar&quot;</span>
+        <span class="n">server_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="n">jar_name</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="s2">&quot;/data/local/tmp/&quot;</span><span class="p">)</span>
+        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;CLASSPATH=/data/local/tmp/</span><span class="si">{</span><span class="n">jar_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;app_process&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;com.genymobile.scrcpy.Server&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;1.24&quot;</span><span class="p">,</span>  <span class="c1"># Scrcpy server version</span>
+            <span class="s2">&quot;log_level=info&quot;</span><span class="p">,</span>  <span class="c1"># Log level: info, verbose...</span>
+            <span class="sa">f</span><span class="s2">&quot;bit_rate=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Bitrate of video</span>
+            <span class="sa">f</span><span class="s2">&quot;max_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max screen width (long side)</span>
+            <span class="sa">f</span><span class="s2">&quot;max_fps=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max frame per second</span>
+            <span class="sa">f</span><span class="s2">&quot;lock_video_orientation=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Lock screen orientation: LOCK_SCREEN_ORIENTATION</span>
+            <span class="s2">&quot;tunnel_forward=true&quot;</span><span class="p">,</span>  <span class="c1"># Tunnel forward</span>
+            <span class="s2">&quot;control=true&quot;</span><span class="p">,</span>  <span class="c1"># Control enabled</span>
+            <span class="s2">&quot;display_id=0&quot;</span><span class="p">,</span>  <span class="c1"># Display id</span>
+            <span class="s2">&quot;show_touches=false&quot;</span><span class="p">,</span>  <span class="c1"># Show touches</span>
+            <span class="sa">f</span><span class="s2">&quot;stay_awake=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Stay awake</span>
+            <span class="s2">&quot;clipboard_autosync=false&quot;</span><span class="p">,</span>  <span class="c1"># Disable Clipboard autosync</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">_AdbStreamConnection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="s2">&quot;CLASSPATH=/data/local/tmp/scrcpy-server.jar&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;app_process&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;/&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;com.genymobile.scrcpy.Server&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;1.20&quot;</span><span class="p">,</span>  <span class="c1"># Scrcpy server version</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span>  <span class="c1"># Log level: info, verbose...</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max screen width (long side)</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Bitrate of video</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max frame per second</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Lock screen orientation: LOCK_SCREEN_ORIENTATION</span>
-                <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Tunnel forward</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Crop screen</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Send frame rate to client</span>
-                <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Control enabled</span>
-                <span class="s2">&quot;0&quot;</span><span class="p">,</span>  <span class="c1"># Display id</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Show touches</span>
-                <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Stay awake</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Codec (video encoding) options</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Encoder name</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Power off screen after server closed</span>
-            <span class="p">],</span>
+            <span class="n">commands</span><span class="p">,</span>
             <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
+
         <span class="c1"># Wait for server to start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
