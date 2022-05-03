@@ -1,7 +1,6 @@
 from typing import Optional
 
 import click
-import cv2
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -10,7 +9,10 @@ import scrcpy
 
 from .ui_main import Ui_MainWindow
 
-app = QApplication([])
+if not QApplication.instance():
+    app = QApplication([])
+else:
+    app = QApplication.instance()
 
 
 class MainWindow(QMainWindow):
