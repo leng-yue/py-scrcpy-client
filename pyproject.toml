@@ -15,9 +15,9 @@ packages = [
 py-scrcpy = "scrcpy_ui:main"
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.7,<3.11"
 av = "^9.0.0"
-opencv-python = "^4.0.0"
+opencv-python = "^4.5.0"
 
 # Optional dependencies for ui
 click ={ version = "^8.0.0", optional = true }
