@@ -3,11 +3,9 @@ import socket
 import struct
 import threading
 import time
-from io import BufferedIOBase, BytesIO
 from time import sleep
 from typing import Any, Callable, Optional, Tuple, Union
 
-import av
 import cv2
 import numpy as np
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
@@ -112,34 +110,38 @@ class Client:
         """
         Deploy server to android device
         """
-        server_root = os.path.abspath(os.path.dirname(__file__))
-        server_file_path = server_root + "/scrcpy-server.jar"
+        jar_name = "scrcpy-server-v1.24.jar"
+        server_file_path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), jar_name
+        )
         self.device.push(server_file_path, "/data/local/tmp/")
         self.__server_stream: _AdbStreamConnection = self.device.shell(
             [
-                "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
+                f"CLASSPATH=/data/local/tmp/{jar_name}",
                 "app_process",
                 "/",
                 "com.genymobile.scrcpy.Server",
-                "1.20",  # Scrcpy server version
-                "info",  # Log level: info, verbose...
-                f"{self.max_width}",  # Max screen width (long side)
-                f"{self.bitrate}",  # Bitrate of video
-                f"{self.max_fps}",  # Max frame per second
-                f"{self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
-                "true",  # Tunnel forward
-                "-",  # Crop screen
-                "false",  # Send frame rate to client
-                "true",  # Control enabled
-                "0",  # Display id
-                "false",  # Show touches
-                "true" if self.stay_awake else "false",  # Stay awake
-                "-",  # Codec (video encoding) options
-                "-",  # Encoder name
-                "false",  # Power off screen after server closed
+                "1.24",  # Scrcpy server version
+                "log_level=info",  # Log level: info, verbose...
+                f"bit_rate={self.bitrate}",  # Bitrate of video
+                # f"max_size={self.max_width}",  # Max screen width (long side)
+                # f"max_fps={self.max_fps}",  # Max frame per second
+                # f"lock_video_orientation={self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
+                # "tunnel_forward=true",  # Tunnel forward
+                # "crop=",  # Crop screen
+                # # "false",  # Send frame rate to client
+                # "control=true",  # Control enabled
+                # "display_id=0",  # Display id
+                # "show_touches=false",  # Show touches
+                # "stay_awake=true" if self.stay_awake else "stay_awake=false",  # Stay awake
+                # "codec_options=-",  # Codec (video encoding) options
+                # "encoder_name=-",  # Encoder name
+                # "power_off_on_close=false",  # Power off screen after server closed
+                # "clipboard_autosync=false",  # Clipboard autosync
             ],
             stream=True,
         )
+
         # Wait for server to start
         self.__server_stream.read(10)
 
