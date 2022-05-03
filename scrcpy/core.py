@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
 from av.codec import CodecContext
+from av.error import InvalidDataError
 
 from .const import EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
 from .control import ControlSender
@@ -190,7 +191,7 @@ class Client:
                         self.last_frame = frame
                         self.resolution = (frame.shape[1], frame.shape[0])
                         self.__send_to_listeners(EVENT_FRAME, frame)
-            except BlockingIOError:
+            except (BlockingIOError, InvalidDataError):
                 time.sleep(0.01)
                 if not self.block_frame:
                     self.__send_to_listeners(EVENT_FRAME, None)
