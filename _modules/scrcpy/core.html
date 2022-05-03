@@ -43,6 +43,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">_AdbStreamConnection</span><span class="p">,</span> <span class="n">adb</span>
 <span class="kn">from</span> <span class="nn">av.codec</span> <span class="kn">import</span> <span class="n">CodecContext</span>
+<span class="kn">from</span> <span class="nn">av.error</span> <span class="kn">import</span> <span class="n">InvalidDataError</span>
 
 <span class="kn">from</span> <span class="nn">.const</span> <span class="kn">import</span> <span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">EVENT_INIT</span><span class="p">,</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span>
 <span class="kn">from</span> <span class="nn">.control</span> <span class="kn">import</span> <span class="n">ControlSender</span>
@@ -223,7 +224,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">last_frame</span> <span class="o">=</span> <span class="n">frame</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">BlockingIOError</span><span class="p">,</span> <span class="n">InvalidDataError</span><span class="p">):</span>
                 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_frame</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
