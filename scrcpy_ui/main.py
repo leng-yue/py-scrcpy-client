@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import scrcpy
 
-from .ui_main import Ui_MainWindow
+from ui_main import Ui_MainWindow
 
 if not QApplication.instance():
     app = QApplication([])
