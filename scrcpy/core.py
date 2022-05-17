@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 
 import cv2
 import numpy as np
-from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
+from adbutils import AdbDevice, AdbError, Network, AdbConnection, adb
 from av.codec import CodecContext
 from av.error import InvalidDataError
 
@@ -70,7 +70,7 @@ class Client:
 
         # Need to destroy
         self.alive = False
-        self.__server_stream: Optional[_AdbStreamConnection] = None
+        self.__server_stream: Optional[AdbConnection] = None
         self.__video_socket: Optional[socket.socket] = None
         self.control_socket: Optional[socket.socket] = None
         self.control_socket_lock = threading.Lock()
@@ -134,7 +134,7 @@ class Client:
             f"stay_awake={str(self.stay_awake).lower()}",  # Stay awake
             "clipboard_autosync=false",  # Disable Clipboard autosync
         ]
-        self.__server_stream: _AdbStreamConnection = self.device.shell(
+        self.__server_stream: AdbConnection = self.device.shell(
             commands,
             stream=True,
         )
