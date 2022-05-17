@@ -1,6 +1,6 @@
+from argparse import ArgumentParser
 from typing import Optional
 
-import click
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -16,7 +16,12 @@ else:
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, max_width: Optional[int], serial: Optional[str] = None):
+    def __init__(
+        self,
+        max_width: Optional[int],
+        serial: Optional[str] = None,
+        encoder_name: Optional[str] = None,
+    ):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -31,7 +36,10 @@ class MainWindow(QMainWindow):
 
         # Setup client
         self.client = scrcpy.Client(
-            device=self.device, flip=self.ui.flip.isChecked(), bitrate=1000000000
+            device=self.device,
+            flip=self.ui.flip.isChecked(),
+            bitrate=1000000000,
+            encoder_name=encoder_name,
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
@@ -160,19 +168,25 @@ class MainWindow(QMainWindow):
         self.alive = False
 
 
-@click.command(help="A simple scrcpy client")
-@click.option(
-    "--max_width",
-    default=800,
-    show_default=True,
-    help="Set max width of the window",
-)
-@click.option(
-    "--device",
-    help="Select device manually (device serial required)",
-)
-def main(max_width: int, device: Optional[str]):
-    m = MainWindow(max_width, device)
+def main():
+    parser = ArgumentParser(description="A simple scrcpy client")
+    parser.add_argument(
+        "-m",
+        "--max_width",
+        type=int,
+        default=800,
+        help="Set max width of the window, default 800",
+    )
+    parser.add_argument(
+        "-d",
+        "--device",
+        type=str,
+        help="Select device manually (device serial required)",
+    )
+    parser.add_argument("--encoder_name", type=str, help="Encoder name to use")
+    args = parser.parse_args()
+
+    m = MainWindow(args.max_width, args.device, args.encoder_name)
     m.show()
 
     m.client.start()

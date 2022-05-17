@@ -28,6 +28,7 @@ class Client:
         stay_awake: bool = False,
         lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
         connection_timeout: int = 3000,
+        encoder_name: Optional[str] = None,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -42,8 +43,38 @@ class Client:
             stay_awake: keep Android device awake
             lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
             connection_timeout: timeout for connection, unit is ms
+            encoder_name: encoder name, enum: [OMX.google.h264.encoder, OMX.qcom.video.encoder.avc, c2.qti.avc.encoder, c2.android.avc.encoder], default is None (Auto)
         """
+        # Check Params
+        assert max_width >= 0, "max_width must be greater than or equal to 0"
+        assert bitrate >= 0, "bitrate must be greater than or equal to 0"
+        assert max_fps >= 0, "max_fps must be greater than or equal to 0"
+        assert (
+            -1 <= lock_screen_orientation <= 3
+        ), "lock_screen_orientation must be LOCK_SCREEN_ORIENTATION_*"
+        assert (
+            connection_timeout >= 0
+        ), "connection_timeout must be greater than or equal to 0"
+        assert encoder_name in [
+            None,
+            "OMX.google.h264.encoder",
+            "OMX.qcom.video.encoder.avc",
+            "c2.qti.avc.encoder",
+            "c2.android.avc.encoder",
+        ]
 
+        # Params
+        self.flip = flip
+        self.max_width = max_width
+        self.bitrate = bitrate
+        self.max_fps = max_fps
+        self.block_frame = block_frame
+        self.stay_awake = stay_awake
+        self.lock_screen_orientation = lock_screen_orientation
+        self.connection_timeout = connection_timeout
+        self.encoder_name = encoder_name
+
+        # Connect to device
         if device is None:
             device = adb.device_list()[0]
         elif isinstance(device, str):
@@ -57,16 +88,6 @@ class Client:
         self.resolution: Optional[Tuple[int, int]] = None
         self.device_name: Optional[str] = None
         self.control = ControlSender(self)
-
-        # Params
-        self.flip = flip
-        self.max_width = max_width
-        self.bitrate = bitrate
-        self.max_fps = max_fps
-        self.block_frame = block_frame
-        self.stay_awake = stay_awake
-        self.lock_screen_orientation = lock_screen_orientation
-        self.connection_timeout = connection_timeout
 
         # Need to destroy
         self.alive = False
@@ -134,6 +155,11 @@ class Client:
             f"stay_awake={str(self.stay_awake).lower()}",  # Stay awake
             "clipboard_autosync=false",  # Disable Clipboard autosync
         ]
+
+        # Encoder name
+        if self.encoder_name is not None:
+            commands.append(f"encoder_name={self.encoder_name}")
+
         self.__server_stream: AdbConnection = self.device.shell(
             commands,
             stream=True,
