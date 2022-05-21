@@ -27,7 +27,7 @@ This means you can add multiple listener to the same stream.
 ```python
 import cv2
 
-def on_frame(self):
+def on_frame(frame):
     # If you set non-blocking (default) in constructor, the frame event receiver 
     # may receive None to avoid blocking event.
     if frame is not None:
