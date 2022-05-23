@@ -136,7 +136,7 @@ class Client:
         server_file_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), jar_name
         )
-        self.device.push(server_file_path, "/data/local/tmp/")
+        self.device.sync.push(server_file_path, "/data/local/tmp/scrcpy.jar")
         commands = [
             f"CLASSPATH=/data/local/tmp/{jar_name}",
             "app_process",
