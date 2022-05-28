@@ -156,7 +156,7 @@ class Client:
             "false",  # Show touches
             "true" if self.stay_awake else "false",  # Stay awake
             "-",  # Codec (video encoding) options
-            self.encoder_name or "-", # Encoder name
+            self.encoder_name or "-",  # Encoder name
             "false",  # Power off screen after server closed
         ]
 

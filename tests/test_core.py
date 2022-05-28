@@ -8,14 +8,19 @@ from scrcpy import Client
 from tests.utils import FakeStream
 
 
-class FakeADBDevice:
-    def __init__(self, data, wait=0):
-        self.data = data
-        self.__wait = wait
-
+class Sync:
     @staticmethod
     def push(a, b):
         pass
+
+
+class FakeADBDevice:
+
+    sync = Sync()
+
+    def __init__(self, data, wait=0):
+        self.data = data
+        self.__wait = wait
 
     @staticmethod
     def shell(a, stream=True):
