@@ -21,7 +21,7 @@ opencv-python = "^4.5.0"
 adbutils = "^0.16.2"
 
 # Optional dependencies for ui
-PySide6 ={ version = "^6.0.0", optional = true }
+PySide6 = { version = "^6.0.0", optional = true }
 
 [tool.poetry.extras]
 ui = ["PySide6"]

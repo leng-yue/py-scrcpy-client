@@ -13,8 +13,8 @@
     <a href="https://pepy.tech/project/scrcpy-client" target="_blank">
         <img src="https://pepy.tech/badge/scrcpy-client" />
     </a>
-    <a href="https://github.com/Genymobile/scrcpy/tree/v1.24" target="_blank">
-        <img src="https://img.shields.io/badge/scrcpy-v1.24-violet" />
+    <a href="https://github.com/Genymobile/scrcpy/tree/v1.20" target="_blank">
+        <img src="https://img.shields.io/badge/scrcpy-v1.20-violet" />
     </a>
 </p>
 
@@ -38,8 +38,8 @@ Here is the document GitHub page: [Documentation](https://leng-yue.github.io/py-
 Also, you can check `scrcpy_ui/main.py` for a full functional demo.
 
 ## Contribution & Development
-Already implemented all functions in scrcpy server 1.24.  
-Please check scrcpy server 1.24 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.24/server)
+Already implemented all functions in scrcpy server 1.20.  
+Please check scrcpy server 1.20 source code: [Link](https://github.com/Genymobile/scrcpy/tree/v1.20/server)
 
 ## Reference & Appreciation
 - Core: [scrcpy](https://github.com/Genymobile/scrcpy)

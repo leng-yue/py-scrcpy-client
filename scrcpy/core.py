@@ -132,7 +132,7 @@ class Client:
         """
         Deploy server to android device
         """
-        jar_name = "scrcpy-server-v1.24.jar"
+        jar_name = "scrcpy-server.jar"
         server_file_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), jar_name
         )
@@ -142,23 +142,23 @@ class Client:
             "app_process",
             "/",
             "com.genymobile.scrcpy.Server",
-            "1.24",  # Scrcpy server version
-            "log_level=info",  # Log level: info, verbose...
-            f"bit_rate={self.bitrate}",  # Bitrate of video
-            f"max_size={self.max_width}",  # Max screen width (long side)
-            f"max_fps={self.max_fps}",  # Max frame per second
-            f"lock_video_orientation={self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
-            "tunnel_forward=true",  # Tunnel forward
-            "control=true",  # Control enabled
-            "display_id=0",  # Display id
-            "show_touches=false",  # Show touches
-            f"stay_awake={str(self.stay_awake).lower()}",  # Stay awake
-            "clipboard_autosync=false",  # Disable Clipboard autosync
+            "1.20",  # Scrcpy server version
+            "info",  # Log level: info, verbose...
+            f"{self.max_width}",  # Max screen width (long side)
+            f"{self.bitrate}",  # Bitrate of video
+            f"{self.max_fps}",  # Max frame per second
+            f"{self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
+            "true",  # Tunnel forward
+            "-",  # Crop screen
+            "false",  # Send frame rate to client
+            "true",  # Control enabled
+            "0",  # Display id
+            "false",  # Show touches
+            "true" if self.stay_awake else "false",  # Stay awake
+            "-",  # Codec (video encoding) options
+            self.encoder_name or "-", # Encoder name
+            "false",  # Power off screen after server closed
         ]
-
-        # Encoder name
-        if self.encoder_name is not None:
-            commands.append(f"encoder_name={self.encoder_name}")
 
         self.__server_stream: AdbConnection = self.device.shell(
             commands,
