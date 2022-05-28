@@ -41,7 +41,7 @@
 
 <span class="kn">import</span> <span class="nn">cv2</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">_AdbStreamConnection</span><span class="p">,</span> <span class="n">adb</span>
+<span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">AdbConnection</span><span class="p">,</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">adb</span>
 <span class="kn">from</span> <span class="nn">av.codec</span> <span class="kn">import</span> <span class="n">CodecContext</span>
 <span class="kn">from</span> <span class="nn">av.error</span> <span class="kn">import</span> <span class="n">InvalidDataError</span>
 
@@ -61,6 +61,7 @@
         <span class="n">stay_awake</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">lock_screen_orientation</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span><span class="p">,</span>
         <span class="n">connection_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">,</span>
+        <span class="n">encoder_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a scrcpy client, this client won&#39;t be started until you call the start function</span>
@@ -75,8 +76,38 @@
 <span class="sd">            stay_awake: keep Android device awake</span>
 <span class="sd">            lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*</span>
 <span class="sd">            connection_timeout: timeout for connection, unit is ms</span>
+<span class="sd">            encoder_name: encoder name, enum: [OMX.google.h264.encoder, OMX.qcom.video.encoder.avc, c2.qti.avc.encoder, c2.android.avc.encoder], default is None (Auto)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check Params</span>
+        <span class="k">assert</span> <span class="n">max_width</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_width must be greater than or equal to 0&quot;</span>
+        <span class="k">assert</span> <span class="n">bitrate</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;bitrate must be greater than or equal to 0&quot;</span>
+        <span class="k">assert</span> <span class="n">max_fps</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_fps must be greater than or equal to 0&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">lock_screen_orientation</span> <span class="o">&lt;=</span> <span class="mi">3</span>
+        <span class="p">),</span> <span class="s2">&quot;lock_screen_orientation must be LOCK_SCREEN_ORIENTATION_*&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">connection_timeout</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;connection_timeout must be greater than or equal to 0&quot;</span>
+        <span class="k">assert</span> <span class="n">encoder_name</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;OMX.google.h264.encoder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;OMX.qcom.video.encoder.avc&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;c2.qti.avc.encoder&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;c2.android.avc.encoder&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
 
+        <span class="c1"># Params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flip</span> <span class="o">=</span> <span class="n">flip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="n">bitrate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span> <span class="o">=</span> <span class="n">max_fps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_frame</span> <span class="o">=</span> <span class="n">block_frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="o">=</span> <span class="n">stay_awake</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span> <span class="o">=</span> <span class="n">lock_screen_orientation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">=</span> <span class="n">connection_timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder_name</span> <span class="o">=</span> <span class="n">encoder_name</span>
+
+        <span class="c1"># Connect to device</span>
         <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">adb</span><span class="o">.</span><span class="n">device_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -91,19 +122,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control</span> <span class="o">=</span> <span class="n">ControlSender</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-        <span class="c1"># Params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">flip</span> <span class="o">=</span> <span class="n">flip</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="n">bitrate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span> <span class="o">=</span> <span class="n">max_fps</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">block_frame</span> <span class="o">=</span> <span class="n">block_frame</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="o">=</span> <span class="n">stay_awake</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span> <span class="o">=</span> <span class="n">lock_screen_orientation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">=</span> <span class="n">connection_timeout</span>
-
         <span class="c1"># Need to destroy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_AdbStreamConnection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AdbConnection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
@@ -144,30 +165,35 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deploy server to android device</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">jar_name</span> <span class="o">=</span> <span class="s2">&quot;scrcpy-server-v1.24.jar&quot;</span>
+        <span class="n">jar_name</span> <span class="o">=</span> <span class="s2">&quot;scrcpy-server.jar&quot;</span>
         <span class="n">server_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="n">jar_name</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="s2">&quot;/data/local/tmp/&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;/data/local/tmp/</span><span class="si">{</span><span class="n">jar_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
             <span class="sa">f</span><span class="s2">&quot;CLASSPATH=/data/local/tmp/</span><span class="si">{</span><span class="n">jar_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;app_process&quot;</span><span class="p">,</span>
             <span class="s2">&quot;/&quot;</span><span class="p">,</span>
             <span class="s2">&quot;com.genymobile.scrcpy.Server&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;1.24&quot;</span><span class="p">,</span>  <span class="c1"># Scrcpy server version</span>
-            <span class="s2">&quot;log_level=info&quot;</span><span class="p">,</span>  <span class="c1"># Log level: info, verbose...</span>
-            <span class="sa">f</span><span class="s2">&quot;bit_rate=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Bitrate of video</span>
-            <span class="sa">f</span><span class="s2">&quot;max_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max screen width (long side)</span>
-            <span class="sa">f</span><span class="s2">&quot;max_fps=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max frame per second</span>
-            <span class="sa">f</span><span class="s2">&quot;lock_video_orientation=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Lock screen orientation: LOCK_SCREEN_ORIENTATION</span>
-            <span class="s2">&quot;tunnel_forward=true&quot;</span><span class="p">,</span>  <span class="c1"># Tunnel forward</span>
-            <span class="s2">&quot;control=true&quot;</span><span class="p">,</span>  <span class="c1"># Control enabled</span>
-            <span class="s2">&quot;display_id=0&quot;</span><span class="p">,</span>  <span class="c1"># Display id</span>
-            <span class="s2">&quot;show_touches=false&quot;</span><span class="p">,</span>  <span class="c1"># Show touches</span>
-            <span class="sa">f</span><span class="s2">&quot;stay_awake=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Stay awake</span>
-            <span class="s2">&quot;clipboard_autosync=false&quot;</span><span class="p">,</span>  <span class="c1"># Disable Clipboard autosync</span>
+            <span class="s2">&quot;1.20&quot;</span><span class="p">,</span>  <span class="c1"># Scrcpy server version</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">,</span>  <span class="c1"># Log level: info, verbose...</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max screen width (long side)</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Bitrate of video</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max frame per second</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Lock screen orientation: LOCK_SCREEN_ORIENTATION</span>
+            <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Tunnel forward</span>
+            <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Crop screen</span>
+            <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Send frame rate to client</span>
+            <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Control enabled</span>
+            <span class="s2">&quot;0&quot;</span><span class="p">,</span>  <span class="c1"># Display id</span>
+            <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Show touches</span>
+            <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Stay awake</span>
+            <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Codec (video encoding) options</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoder_name</span> <span class="ow">or</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Encoder name</span>
+            <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Power off screen after server closed</span>
         <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">_AdbStreamConnection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">AdbConnection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
             <span class="n">commands</span><span class="p">,</span>
             <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
