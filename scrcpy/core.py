@@ -187,7 +187,9 @@ class Client:
         self.__send_to_listeners(EVENT_INIT)
 
         if threaded or daemon_threaded:
-            self.stream_loop_thread = threading.Thread(target=self.__stream_loop, daemon=daemon_threaded)
+            self.stream_loop_thread = threading.Thread(
+                target=self.__stream_loop, daemon=daemon_threaded
+            )
             self.stream_loop_thread.start()
         else:
             self.__stream_loop()
