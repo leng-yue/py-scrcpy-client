@@ -96,6 +96,9 @@ class Client:
         self.control_socket: Optional[socket.socket] = None
         self.control_socket_lock = threading.Lock()
 
+        # Available if start with threaded or daemon_threaded
+        self.stream_loop_thread = None
+
     def __init_server_connection(self) -> None:
         """
         Connect to android server, there will be two sockets, video and control socket.
@@ -168,12 +171,13 @@ class Client:
         # Wait for server to start
         self.__server_stream.read(10)
 
-    def start(self, threaded: bool = False) -> None:
+    def start(self, threaded: bool = False, daemon_threaded: bool = False) -> None:
         """
         Start listening video stream
 
         Args:
             threaded: Run stream loop in a different thread to avoid blocking
+            daemon_threaded: Run stream loop in a daemon thread to avoid blocking
         """
         assert self.alive is False
 
@@ -182,8 +186,11 @@ class Client:
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
 
-        if threaded:
-            threading.Thread(target=self.__stream_loop).start()
+        if threaded or daemon_threaded:
+            self.stream_loop_thread = threading.Thread(
+                target=self.__stream_loop, daemon=daemon_threaded
+            )
+            self.stream_loop_thread.start()
         else:
             self.__stream_loop()
 
