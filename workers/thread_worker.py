@@ -108,12 +108,12 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                         f"max_block_frame out size: {self.list_block_frame_time}"
                     )
                     self.list_block_frame_time = []
-                elif now - self.list_block_frame_time[-1] >= self.time_add_block_list*10:
-                    self.list_block_frame_time = []
                 elif (
                     now - self.list_block_frame_time[-1]
-                    > self.time_add_block_list
+                    >= self.time_add_block_list * 10
                 ):
+                    self.list_block_frame_time = []
+                elif now - self.list_block_frame_time[-1] > self.time_add_block_list:
                     self.list_block_frame_time.append(now)
 
     def stop(self):

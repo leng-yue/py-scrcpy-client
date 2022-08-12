@@ -1,10 +1,10 @@
 import os
-import time
 import threading
-from loguru import logger
+import time
+from multiprocessing import Process
 
 from adbutils import adb
-from multiprocessing import Process
+from loguru import logger
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
@@ -78,7 +78,9 @@ class MainWindow(QMainWindow):
         self.show()
 
         # region threads
-        threading.Thread(target=self.listen_device, args=(self.signal_update_table,), daemon=True).start()
+        threading.Thread(
+            target=self.listen_device, args=(self.signal_update_table,), daemon=True
+        ).start()
         self.signal_update_table.connect(self.update_table_data)
         # threading.Thread(target=self.reconnect_offline, daemon=True).start()
         # endregion
@@ -213,61 +215,71 @@ class MainWindow(QMainWindow):
             if not rows:
                 time.sleep(2)
                 rows = 1
-            old_serials_map = {self.ui.table_devices.item(row, 2).text(): row for row in range(rows) if
-                               self.ui.table_devices.item(row, 2)}
+            old_serials_map = {
+                self.ui.table_devices.item(row, 2).text(): row
+                for row in range(rows)
+                if self.ui.table_devices.item(row, 2)
+            }
             old_serials = set(old_serials_map.keys())
             keep = all_serials & old_serials
             to_insert_data = [d for d in data if d[2] not in keep]
             if to_insert_data:
-                print('to insert', to_insert_data)
+                print("to insert", to_insert_data)
             to_remove = [se for se in old_serials if se not in keep]
             if to_insert_data or to_remove:
                 signal.emit(to_insert_data, to_remove)
             time.sleep(2)
 
-    def reconnect_offline(self):
-        import subprocess
-        
-        while True:
-            time.sleep(5)
-            try:
-                to_reconnect_devices = []
-                path = adb_path()
-                try:
-                    sys._MEIPASS
-                    path = os.path.join('adbutils', 'binaries', 'adb.exe')
-                except:
-                    pass
-                encoding = 'utf-8'
-                if sys.platform == 'win32':
-                    encoding = 'gbk'
-                res = subprocess.Popen('{} devices -l'.format(path),
-                                       shell=True,
-                                       stdout=subprocess.PIPE,
-                                       encoding=encoding
-                                       )
-                try:
-                    res, _ = res.communicate(timeout=3)
-                except Exception as e:
-                    logger.error('{} error {}'.format('{} devices -l'.format(path), str(e)))
-                    continue
+    # def reconnect_offline(self):
+    #     import subprocess
 
-                for line in res.split('\n'):
-                    line = line.strip()
-                    if line.startswith('emulator') or not line:
-                        continue
-                    if 'offline' in line:
-                        res_list = line.split(' ')
-                        device_sn = res_list[0]
-                        to_reconnect_devices.append(device_sn)
-                if to_reconnect_devices:
-                    logger.info('to_reconnect_devices: {}'.format(to_reconnect_devices))
-                for device_sn in to_reconnect_devices:
-                    subprocess.Popen('{} disconnect {}'.format(path, device_sn), shell=True)
-                    subprocess.Popen('{} connect {}'.format(path, device_sn), shell=True)
-                    logger.debug('{} connect {}'.format(path, device_sn))
-            except Exception as e:
-                logger.error('reconnect error: {}'.format(str(e)))
+    #     while True:
+    #         time.sleep(5)
+    #         try:
+    #             to_reconnect_devices = []
+    #             path = adb_path()
+    #             try:
+    #                 sys._MEIPASS
+    #                 path = os.path.join("adbutils", "binaries", "adb.exe")
+    #             except:
+    #                 pass
+    #             encoding = "utf-8"
+    #             if sys.platform == "win32":
+    #                 encoding = "gbk"
+    #             res = subprocess.Popen(
+    #                 "{} devices -l".format(path),
+    #                 shell=True,
+    #                 stdout=subprocess.PIPE,
+    #                 encoding=encoding,
+    #             )
+    #             try:
+    #                 res, _ = res.communicate(timeout=3)
+    #             except Exception as e:
+    #                 logger.error(
+    #                     "{} error {}".format("{} devices -l".format(path), str(e))
+    #                 )
+    #                 continue
+
+    #             for line in res.split("\n"):
+    #                 line = line.strip()
+    #                 if line.startswith("emulator") or not line:
+    #                     continue
+    #                 if "offline" in line:
+    #                     res_list = line.split(" ")
+    #                     device_sn = res_list[0]
+    #                     to_reconnect_devices.append(device_sn)
+    #             if to_reconnect_devices:
+    #                 logger.info("to_reconnect_devices: {}".format(to_reconnect_devices))
+    #             for device_sn in to_reconnect_devices:
+    #                 subprocess.Popen(
+    #                     "{} disconnect {}".format(path, device_sn), shell=True
+    #                 )
+    #                 subprocess.Popen(
+    #                     "{} connect {}".format(path, device_sn), shell=True
+    #                 )
+    #                 logger.debug("{} connect {}".format(path, device_sn))
+    #         except Exception as e:
+    #             logger.error("reconnect error: {}".format(str(e)))
 
     def on_click_all_start(self):
         for row, box in self.dict_table_box["check"].items():
@@ -361,16 +373,19 @@ class MainWindow(QMainWindow):
             del self.dict_client[serial_no]
             self.chg_button2table_dict(row, "operate", -1)
 
-    def update_table_data(self, data: list, remove_serialno: list=None):
-        logger.warning(
-            f"数据刷新: {data}\n \t\t{remove_serialno}"
-        )
+    def update_table_data(self, data: list, remove_serialno: list = None):
+        logger.warning(f"数据刷新: {data}\n \t\t{remove_serialno}")
         self.dict_table_buttons = {}
         self.dict_table_box = {"check": {}, "combo": {}}
         for _rm_no in remove_serialno:
-            logger.info(f"self.ui.table_devices.rowCount(): {self.ui.table_devices.rowCount()}\n self.ui.table_devices.item(row_num, self.SerialColNum): {self.ui.table_devices.item(0, self.SerialColNum).text()}")
+            logger.info(
+                f"self.ui.table_devices.rowCount(): {self.ui.table_devices.rowCount()}\n self.ui.table_devices.item(row_num, self.SerialColNum): {self.ui.table_devices.item(0, self.SerialColNum).text()}"
+            )
             for row_num in range(self.ui.table_devices.rowCount()):
-                if self.ui.table_devices.item(row_num, self.SerialColNum).text() in remove_serialno:
+                if (
+                    self.ui.table_devices.item(row_num, self.SerialColNum).text()
+                    in remove_serialno
+                ):
                     logger.warning(f"will remove row: {row_num}, no: {_rm_no}")
                     self.ui.table_devices.removeRow(row_num)
 
