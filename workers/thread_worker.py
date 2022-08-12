@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import socket
-import struct
 import threading
 import time
 
@@ -28,11 +27,9 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.threadID = threadID
         self.stop_flag = False
         self.signal = signal
-        self.serverinfo = None
-        if serverinfo:
-            self.serverinfo = self.get_server(serverinfo)
+        self.serverinfo = serverinfo
         self.max_block_frame = 100
-        self.time_clean_block_list = 10  # s
+        self.time_add_block_list = 2  # s
         self.list_block_frame_time = []
         self.serialno = serialno
         self.device = adb.device(serial=serialno)
@@ -43,7 +40,14 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         serverinfo.server.setblocking(0)
         return serverinfo
 
+    def http_send(self, img):
+        # TODO 在这里实现调用AI服务
+        bimg = imencode(img)
+        rst = None
+        return rst
+
     def udp_split_send(self, img):
+        # TODO 在这里实现调用AI服务
         bimg = imencode(img)
         len_img = len(bimg)
 
@@ -80,6 +84,8 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
             return None
 
     def run(self):
+        if self.serverinfo:
+            self.serverinfo = self.get_server(self.serverinfo)
         for frame in self.client.start():
             if self.stop_flag:
                 return
@@ -92,21 +98,21 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                     if rst:
                         print(f"< recv{self.serialno} udp recall !!!!! {rst}")
                     else:
-                        print("fuck!")
+                        print("udp not reponse!")
             else:
                 now = time.time()
                 if not self.list_block_frame_time:
                     self.list_block_frame_time.append(now)
                 elif len(self.list_block_frame_time) >= self.max_block_frame:
-                    logger.warning(
+                    logger.debug(
                         f"max_block_frame out size: {self.list_block_frame_time}"
                     )
                     self.list_block_frame_time = []
-                elif now - self.list_block_frame_time[-1] >= self.time_clean_block_list:
+                elif now - self.list_block_frame_time[-1] >= self.time_add_block_list*10:
                     self.list_block_frame_time = []
                 elif (
                     now - self.list_block_frame_time[-1]
-                    < self.time_clean_block_list / 10
+                    > self.time_add_block_list
                 ):
                     self.list_block_frame_time.append(now)
 

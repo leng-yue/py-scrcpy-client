@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "muti-scrcpy-client"
-version = "0.4.0.1"
+version = "0.5"
 description = "A muticlient of scrcpy"
 authors = ["ianvzs <ianvzs@outlook.com>"]
 readme = "README.md"
@@ -16,7 +16,7 @@ packages = [
 py-muti-scrcpy = "scrcpy_ui:main"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.10"
+python = ">=3.7,<=3.10.4"
 av = "^8.0.3"
 opencv-python = "^4.5.3"
 adbutils = "^0.11.0"

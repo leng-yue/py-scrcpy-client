@@ -3,57 +3,21 @@
 ################################################################################
 ## Form generated from reading UI file 'config_edit.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.2.2
+## Created by: Qt User Interface Compiler version 6.3.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QLocale,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QSize,
-    Qt,
-    QTime,
-    QUrl,
-)
-from PySide6.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QGradient,
-    QIcon,
-    QImage,
-    QKeySequence,
-    QLinearGradient,
-    QPainter,
-    QPalette,
-    QPixmap,
-    QRadialGradient,
-    QTransform,
-)
-from PySide6.QtWidgets import (
-    QAbstractButton,
-    QApplication,
-    QComboBox,
-    QDialog,
-    QDialogButtonBox,
-    QGridLayout,
-    QLabel,
-    QLineEdit,
-    QSizePolicy,
-    QTextEdit,
-    QWidget,
-)
-
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
+    QDialogButtonBox, QGridLayout, QLabel, QLineEdit,
+    QSizePolicy, QTextEdit, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -72,28 +36,26 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_4, 2, 1, 1, 1)
 
-        self.lineedit_axie_ids = QLineEdit(Dialog)
-        self.lineedit_axie_ids.setObjectName(u"lineedit_axie_ids")
+        self.lineedit_account = QLineEdit(Dialog)
+        self.lineedit_account.setObjectName(u"lineedit_account")
 
-        self.gridLayout.addWidget(self.lineedit_axie_ids, 4, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineedit_account, 4, 3, 1, 1)
 
         self.label_5 = QLabel(Dialog)
         self.label_5.setObjectName(u"label_5")
 
         self.gridLayout.addWidget(self.label_5, 1, 1, 1, 1)
 
-        self.textedit_ronin = QTextEdit(Dialog)
-        self.textedit_ronin.setObjectName(u"textedit_ronin")
-        self.textedit_ronin.setTabChangesFocus(False)
-        self.textedit_ronin.setHtml(
-            u'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-            '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
-            "p, li { white-space: pre-wrap; }\n"
-            "</style></head><body style=\" font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-            '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>'
-        )
+        self.textedit_token = QTextEdit(Dialog)
+        self.textedit_token.setObjectName(u"textedit_token")
+        self.textedit_token.setTabChangesFocus(False)
+        self.textedit_token.setHtml(u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.AppleSystemUIFont'; font-size:13pt;\"><br /></p></body></html>")
 
-        self.gridLayout.addWidget(self.textedit_ronin, 10, 3, 1, 1)
+        self.gridLayout.addWidget(self.textedit_token, 10, 3, 1, 1)
 
         self.label = QLabel(Dialog)
         self.label.setObjectName(u"label")
@@ -108,7 +70,7 @@ class Ui_Dialog(object):
         self.buttonBox = QDialogButtonBox(Dialog)
         self.buttonBox.setObjectName(u"buttonBox")
         self.buttonBox.setOrientation(Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
 
         self.gridLayout.addWidget(self.buttonBox, 15, 1, 1, 4)
 
@@ -137,35 +99,25 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.lineedit_nickname, 8, 3, 1, 1)
 
+
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
 
         QMetaObject.connectSlotsByName(Dialog)
-
     # setupUi
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.combobox_run_mode.setCurrentText("")
         self.label_4.setText(QCoreApplication.translate("Dialog", u"AI Level: ", None))
-        self.lineedit_axie_ids.setText("")
-        self.lineedit_axie_ids.setPlaceholderText(
-            QCoreApplication.translate("Dialog", u"axie_id1, axie_id2, axie_id3", None)
-        )
+        self.lineedit_account.setText("")
+        self.lineedit_account.setPlaceholderText(QCoreApplication.translate("Dialog", u"id1,id2,id3", None))
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Team: ", None))
-        self.textedit_ronin.setPlaceholderText(
-            QCoreApplication.translate(
-                "Dialog",
-                u"ronin:aiosdjiuqshdiu23hdih1289r89w3hr78asdsdasasdasdsadasd",
-                None,
-            )
-        )
-        self.label.setText(QCoreApplication.translate("Dialog", u"Axie IDs: ", None))
-        self.label_2.setText(
-            QCoreApplication.translate("Dialog", u"Ronin Addr: ", None)
-        )
+        self.textedit_token.setPlaceholderText(QCoreApplication.translate("Dialog", u"token cookie", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Account: ", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Token: ", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Run Mode: ", None))
         self.label_6.setText(QCoreApplication.translate("Dialog", u"Nick Name: ", None))
-
     # retranslateUi
+

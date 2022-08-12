@@ -66,10 +66,10 @@ class ConfigEditWindow(QDialog):
         data = {
             "team": self.ui.combobox_team.currentText(),
             "ai_level": self.ui.combobox_ai_level.currentText(),
-            "axie_ids": self.ui.lineedit_axie_ids.text(),
+            "account": self.ui.lineedit_account.text(),
             "run_mode": self.ui.combobox_run_mode.currentText(),
             "nickname": self.ui.lineedit_nickname.text(),
-            "ronin_addr": self.ui.textedit_ronin.toPlainText(),
+            "token": self.ui.textedit_token.toPlainText(),
         }
         for v in data.values():
             if not v:
@@ -90,9 +90,9 @@ class ConfigEditWindow(QDialog):
             self.set_combobox(self.ui.combobox_team, data["team"])
             self.set_combobox(self.ui.combobox_ai_level, data["ai_level"])
             self.set_combobox(self.ui.combobox_run_mode, data["run_mode"])
-            self.ui.lineedit_axie_ids.setText(data["axie_ids"])
+            self.ui.lineedit_account.setText(data["account"])
             self.ui.lineedit_nickname.setText(data["nickname"])
-            self.ui.textedit_ronin.setText(data["ronin_addr"])
+            self.ui.textedit_token.setText(data["token"])
 
     def accept(self):
         print("I'm alive!!!!!")

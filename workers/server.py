@@ -17,11 +17,11 @@ class UDPServer:
             return
         # region fork work
         logger.info(f"接收到来自{addr}({seriano})的画面{img.shape}，正在处理...")
-        import cv2
+        # import cv2
 
-        cv2.imshow(f"test__{seriano}_{int(time.time())}.png", img)
-        cv2.waitKey(1)
-        time.sleep(0.01)
+        # cv2.imshow(f"test__{seriano}_{int(time.time())}.png", img)
+        # cv2.waitKey(1)
+        # time.sleep(0.01)
         # endregion
         resp = RspInfo(
             utime=int(time.time()),
