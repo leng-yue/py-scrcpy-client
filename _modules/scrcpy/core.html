@@ -129,6 +129,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
 
+        <span class="c1"># Available if start with threaded or daemon_threaded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream_loop_thread</span> <span class="o">=</span> <span class="kc">None</span>
+
     <span class="k">def</span> <span class="nf">__init_server_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Connect to android server, there will be two sockets, video and control socket.</span>
@@ -201,12 +204,13 @@
         <span class="c1"># Wait for server to start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Client.start"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Client.start"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">daemon_threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Start listening video stream</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            threaded: Run stream loop in a different thread to avoid blocking</span>
+<span class="sd">            daemon_threaded: Run stream loop in a daemon thread to avoid blocking</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="ow">is</span> <span class="kc">False</span>
 
@@ -215,8 +219,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_INIT</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">threaded</span><span class="p">:</span>
-            <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">threaded</span> <span class="ow">or</span> <span class="n">daemon_threaded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream_loop_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="n">daemon_threaded</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stream_loop_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">()</span></div>
 
