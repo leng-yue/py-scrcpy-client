@@ -15,7 +15,7 @@ client = scrcpy.Client(device="DEVICE SERIAL")
 # You can also pass an ADBClient instance to it
 from adbutils import adb
 adb.connect("127.0.0.1:5555")
-client = scrcpy.Client(device=adb.devices()[0])
+client = scrcpy.Client(device=adb.device_list()[0])
 ```
 
 For more information, you should go to [adbutils's webpage](https://github.com/openatx/adbutils).
