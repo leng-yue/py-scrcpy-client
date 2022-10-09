@@ -40,9 +40,9 @@ client.add_listener(scrcpy.EVENT_FRAME, on_frame)
 
 [Optional] You can also add a listener to listen the `init` event.
 ```python
-def on_init(self):
+def on_init():
     # Print device name
-    print(self.client.device_name)
+    print(client.device_name)
 client.add_listener(scrcpy.EVENT_INIT, on_init)
 ```
 
