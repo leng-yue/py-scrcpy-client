@@ -18,7 +18,7 @@ py-scrcpy = "scrcpy_ui:main"
 python = ">=3.7,<3.11"
 av = "^9.0.0"
 opencv-python = "^4.5.0"
-adbutils = "^0.16.2"
+adbutils = "^1.0.8"
 
 # Optional dependencies for ui
 PySide6 = { version = "^6.0.0", optional = true }
