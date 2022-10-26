@@ -202,19 +202,19 @@ class Client:
         if self.__server_stream is not None:
             try:
                 self.__server_stream.close()
-            except:
+            except Exception:
                 pass
 
         if self.control_socket is not None:
             try:
                 self.control_socket.close()
-            except:
+            except Exception:
                 pass
 
         if self.__video_socket is not None:
             try:
                 self.__video_socket.close()
-            except:
+            except Exception:
                 pass
 
     def __stream_loop(self) -> None:
