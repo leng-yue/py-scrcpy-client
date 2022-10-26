@@ -50,7 +50,7 @@ However, <strong>linux users still need to install adb manually</strong>.</p>
 <span class="c1"># You can also pass an ADBClient instance to it</span>
 <span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">adb</span>
 <span class="n">adb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;127.0.0.1:5555&quot;</span><span class="p">)</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">adb</span><span class="o">.</span><span class="n">devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">adb</span><span class="o">.</span><span class="n">device_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>For more information, you should go to <a class="reference external" href="https://github.com/openatx/adbutils">adbutils’s webpage</a>.</p>
@@ -73,9 +73,9 @@ This means you can add multiple listener to the same stream.</p>
 </pre></div>
 </div>
 <p>[Optional] You can also add a listener to listen the <code class="docutils literal notranslate"><span class="pre">init</span></code> event.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">on_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">on_init</span><span class="p">():</span>
     <span class="c1"># Print device name</span>
-    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
 <span class="n">client</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">scrcpy</span><span class="o">.</span><span class="n">EVENT_INIT</span><span class="p">,</span> <span class="n">on_init</span><span class="p">)</span>
 </pre></div>
 </div>
