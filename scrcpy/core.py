@@ -200,11 +200,22 @@ class Client:
         """
         self.alive = False
         if self.__server_stream is not None:
-            self.__server_stream.close()
+            try:
+                self.__server_stream.close()
+            except:
+                pass
+
         if self.control_socket is not None:
-            self.control_socket.close()
+            try:
+                self.control_socket.close()
+            except:
+                pass
+
         if self.__video_socket is not None:
-            self.__video_socket.close()
+            try:
+                self.__video_socket.close()
+            except:
+                pass
 
     def __stream_loop(self) -> None:
         """
@@ -230,6 +241,7 @@ class Client:
                     self.__send_to_listeners(EVENT_FRAME, None)
             except OSError as e:  # Socket Closed
                 if self.alive:
+                    self.stop()
                     raise e
 
     def add_listener(self, cls: str, listener: Callable[..., Any]) -> None:
