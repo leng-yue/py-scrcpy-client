@@ -12,7 +12,7 @@ from adbutils import AdbConnection, AdbDevice, AdbError, Network, adb
 from av.codec import CodecContext
 from av.error import InvalidDataError
 
-from .const import EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
+from .const import EVENT_FRAME, EVENT_INIT, EVENT_DISCONNECT, LOCK_SCREEN_ORIENTATION_UNLOCKED
 from .control import ControlSender
 
 
@@ -81,7 +81,7 @@ class Client:
             device = adb.device(serial=device)
 
         self.device = device
-        self.listeners = dict(frame=[], init=[])
+        self.listeners = dict(frame=[], init=[], disconnect=[])
 
         # User accessible
         self.last_frame: Optional[np.ndarray] = None
@@ -225,6 +225,8 @@ class Client:
         while self.alive:
             try:
                 raw_h264 = self.__video_socket.recv(0x10000)
+                if(raw_h264==b''):
+                    raise ConnectionAbortedError
                 packets = codec.parse(raw_h264)
                 for packet in packets:
                     frames = codec.decode(packet)
@@ -239,6 +241,11 @@ class Client:
                 time.sleep(0.01)
                 if not self.block_frame:
                     self.__send_to_listeners(EVENT_FRAME, None)
+            except ConnectionAbortedError as e:
+                if self.alive:
+                    self.__send_to_listeners(EVENT_DISCONNECT)
+                    self.stop()
+                    raise e
             except OSError as e:  # Socket Closed
                 if self.alive:
                     self.stop()
