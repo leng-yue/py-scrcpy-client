@@ -12,7 +12,12 @@ from adbutils import AdbConnection, AdbDevice, AdbError, Network, adb
 from av.codec import CodecContext
 from av.error import InvalidDataError
 
-from .const import EVENT_DISCONNECT, EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
+from .const import (
+    EVENT_DISCONNECT,
+    EVENT_FRAME,
+    EVENT_INIT,
+    LOCK_SCREEN_ORIENTATION_UNLOCKED,
+)
 from .control import ControlSender
 
 
