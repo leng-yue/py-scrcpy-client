@@ -230,8 +230,8 @@ class Client:
         while self.alive:
             try:
                 raw_h264 = self.__video_socket.recv(0x10000)
-                if(raw_h264==b''):
-                    raise ConnectionAbortedError
+                if raw_h264 == b"":
+                    ConnectionError("Video stream is disconnected")
                 packets = codec.parse(raw_h264)
                 for packet in packets:
                     frames = codec.decode(packet)
@@ -246,13 +246,9 @@ class Client:
                 time.sleep(0.01)
                 if not self.block_frame:
                     self.__send_to_listeners(EVENT_FRAME, None)
-            except ConnectionAbortedError as e:
+            except (ConnectionError, OSError) as e:  # Socket Closed
                 if self.alive:
                     self.__send_to_listeners(EVENT_DISCONNECT)
-                    self.stop()
-                    raise e
-            except OSError as e:  # Socket Closed
-                if self.alive:
                     self.stop()
                     raise e
 
