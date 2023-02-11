@@ -4,7 +4,7 @@
         <img src="https://img.shields.io/pypi/v/scrcpy-client" />
     </a>
     <a href="https://github.com/leng-yue/py-scrcpy-client/actions/workflows/ci.yml" target="_blank">
-        <img src="https://img.shields.io/github/workflow/status/leng-yue/py-scrcpy-client/CI" />
+        <img src="https://img.shields.io/github/actions/workflow/status/leng-yue/py-scrcpy-client/ci.yml?branch=main" />
     </a>
     <a href="https://app.codecov.io/gh/leng-yue/py-scrcpy-client" target="_blank">
         <img src="https://img.shields.io/codecov/c/github/leng-yue/py-scrcpy-client" />
