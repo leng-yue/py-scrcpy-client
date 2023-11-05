@@ -1,31 +1,46 @@
+import queue
+import time
 from argparse import ArgumentParser
 from typing import Optional
 
-from adbutils import adb
-from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
+import numpy as np
+from PySide6 import QtCore
+from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from adbutils import adb
 
 import scrcpy
+from .logger import Logger
+from .ui import Ui_MainWindow
+from .utils.mouse_recorder import MouseRecorder
 
-from .ui_main import Ui_MainWindow
 
-if not QApplication.instance():
-    app = QApplication([])
-else:
-    app = QApplication.instance()
+def get_formatted_bitrate(bitrate):
+    if bitrate < 2 ** 10:
+        return f"{bitrate} bps"
+    elif bitrate < 2 ** 20:
+        return f"{bitrate / 2 ** 10:.2f} Kbps"
+    elif bitrate < 2 ** 30:
+        return f"{bitrate / 2 ** 20:.2f} Mbps"
+    else:
+        return f"{bitrate / 2 ** 30:.2f} Gbps"
 
 
 class MainWindow(QMainWindow):
+    onMouseReleased = QtCore.Signal(QMouseEvent)
+
     def __init__(
-        self,
-        max_width: Optional[int],
-        serial: Optional[str] = None,
-        encoder_name: Optional[str] = None,
+            self,
+            max_width: Optional[int],
+            serial: Optional[str] = None,
+            encoder_name: Optional[str] = None,
     ):
         super(MainWindow, self).__init__()
+        self.__frame_time_window = queue.Queue(10)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.max_width = max_width
+        self.logger = Logger.get_logger()
 
         # Setup devices
         self.devices = self.list_devices()
@@ -38,15 +53,24 @@ class MainWindow(QMainWindow):
         self.client = scrcpy.Client(
             device=self.device,
             flip=self.ui.flip.isChecked(),
-            bitrate=1000000000,
+            bitrate=1_000_000_000,
             encoder_name=encoder_name,
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
 
+        # Setup developer tools
+        self.mouse_recorder = MouseRecorder(self.client)
+        self.onMouseReleased.connect(self.mouse_recorder.on_mouse_released)
+
         # Bind controllers
         self.ui.button_home.clicked.connect(self.on_click_home)
         self.ui.button_back.clicked.connect(self.on_click_back)
+        self.ui.button_switch.clicked.connect(self.on_click_switch)
+
+        self.ui.button_record_click.clicked.connect(self.on_click_record_click)
+        self.ui.button_take_region.clicked.connect(self.on_click_take_region_screenshot)
+        self.ui.button_show_log.clicked.connect(self.logger.show)
 
         # Bind config
         self.ui.combo_device.currentTextChanged.connect(self.choose_device)
@@ -60,6 +84,13 @@ class MainWindow(QMainWindow):
         # Keyboard event
         self.keyPressEvent = self.on_key_event(scrcpy.ACTION_DOWN)
         self.keyReleaseEvent = self.on_key_event(scrcpy.ACTION_UP)
+
+        # setup ui elements
+        bitrate = self.client.bitrate
+        self.ui.label_rate.setText(get_formatted_bitrate(bitrate))
+        self.ui.label_encoder.setText(self.client.encoder_name or "Auto")
+        # move to left top
+        self.move(0, 0)
 
     def choose_device(self, device):
         if device not in self.devices:
@@ -87,10 +118,33 @@ class MainWindow(QMainWindow):
     def on_click_home(self):
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
+        self.logger.info("Home clicked")
 
     def on_click_back(self):
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_DOWN)
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_UP)
+        self.logger.info("Back clicked")
+
+    def on_click_switch(self):
+        self.client.control.keycode(scrcpy.KEYCODE_APP_SWITCH, scrcpy.ACTION_DOWN)
+        self.client.control.keycode(scrcpy.KEYCODE_APP_SWITCH, scrcpy.ACTION_UP)
+        self.logger.info("Switch clicked")
+
+    def on_click_record_click(self):
+        if not self.mouse_recorder.is_recording:
+            self.mouse_recorder.start_record()
+            self.ui.button_record_click.setText("Stop Recording Clicks")
+            print(self.ui.button_record_click.styleSheet())
+            self.ui.button_record_click.setStyleSheet("background-color: red")
+            self.logger.info("Start record click event", self.mouse_recorder)
+        else:
+            self.mouse_recorder.stop_record()
+            self.ui.button_record_click.setText("Start Recording Clicks")
+            self.ui.button_record_click.setStyleSheet("background-color: green")
+            self.logger.info("Stop record click event", self.mouse_recorder)
+
+    def on_click_take_region_screenshot(self):
+        ...
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
@@ -101,8 +155,18 @@ class MainWindow(QMainWindow):
             self.client.control.touch(
                 evt.position().x() / ratio, evt.position().y() / ratio, action
             )
+            self.on_mouse_moved(evt)
+
+            # if is release, call on_mouse_released
+            if action == scrcpy.ACTION_UP:
+                self.onMouseReleased.emit(evt)
 
         return handler
+
+    def on_mouse_moved(self, evt: QMouseEvent):
+        # update ui
+        ratio = self.max_width / max(self.client.resolution)
+        self.ui.label_mouse_pos.setText(f"{evt.position().x() / ratio:.0f}, {evt.position().y() / ratio:.0f}")
 
     def on_key_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QKeyEvent):
@@ -147,8 +211,8 @@ class MainWindow(QMainWindow):
     def on_init(self):
         self.setWindowTitle(f"Serial: {self.client.device_name}")
 
-    def on_frame(self, frame):
-        app.processEvents()
+    def on_frame(self, frame: np.ndarray):
+        QApplication.processEvents()
         if frame is not None:
             ratio = self.max_width / max(self.client.resolution)
             image = QImage(
@@ -163,9 +227,26 @@ class MainWindow(QMainWindow):
             self.ui.label.setPixmap(pix)
             self.resize(1, 1)
 
+            # set fps and resolution
+            if not self.__frame_time_window.full():
+                self.__frame_time_window.put_nowait(time.time())
+            else:
+                last_frame_time = self.__frame_time_window.get_nowait()
+                self.__frame_time_window.put_nowait(cur_frame_time := time.time())
+                frames = self.__frame_time_window.maxsize
+                self.ui.label_fps.setText(f"{frames / (cur_frame_time - last_frame_time):.2f}")
+
+            h, w, _ = frame.shape
+            self.ui.label_resolution.setText(f"{w} * {h}")
+
     def closeEvent(self, _):
+        self.mouse_recorder.stop_record()
+
         self.client.stop()
         self.alive = False
+        self.mouse_recorder.stop_processor()
+
+        QApplication.quit()
 
 
 def main():
@@ -174,7 +255,7 @@ def main():
         "-m",
         "--max_width",
         type=int,
-        default=800,
+        default=1280,
         help="Set max width of the window, default 800",
     )
     parser.add_argument(
@@ -186,13 +267,16 @@ def main():
     parser.add_argument("--encoder_name", type=str, help="Encoder name to use")
     args = parser.parse_args()
 
+    if not QApplication.instance():
+        app = QApplication([])
+    else:
+        app = QApplication.instance()
+
+    app.setApplicationName("PyScrcpyClient")
+
     m = MainWindow(args.max_width, args.device, args.encoder_name)
     m.show()
 
     m.client.start()
     while m.alive:
         m.client.start()
-
-
-if __name__ == "__main__":
-    main()

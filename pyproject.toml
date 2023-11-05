@@ -38,6 +38,49 @@ myst-parser = "^0.17.2"
 [tool.isort]
 profile = "black"
 
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "flake8<5.0.0,>=4.0.1",
+    "isort",
+    "black<23.0.0,>=22.3.0",
+    "pytest<8.0.0,>=7.1.2",
+    "pytest-cov<4.0.0,>=3.0.0",
+    "Sphinx<5.0.0,>=4.1.2",
+    "myst-parser<1.0.0,>=0.17.2",
+]
+
+[tool.pdm.build]
+includes = ["scrcpy", "scrcpy_ui"]
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[project]
+name = "scrcpy-client"
+version = "0.4.7"
+description = "A client of scrcpy"
+authors = [
+    {name = "AresConnor", email = "39639716+AresConnor@users.noreply.github.com"},
+    {name = "lengyue", email = "lengyue@lengyue.me"},
+]
+dependencies = [
+    "av<10.0.0,>=9.0.0",
+    "opencv-python<5.0.0,>=4.5.0",
+    "adbutils<2.0.0,>=1.0.8",
+    "pyside6>=6.5.3",
+    "PySide6-stubs>=6.4.2.0",
+]
+requires-python = ">=3.7,<3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.urls]
+repository = "https://github.com/leng-yue/py-scrcpy-client"
+
+[project.optional-dependencies]
+ui = ["PySide6<7.0.0,>=6.0.0"]
+
+[project.scripts]
+py-scrcpy = "scrcpy_ui:main"
