@@ -71,6 +71,7 @@ dependencies = [
     "adbutils<2.0.0,>=1.0.8",
     "pyside6>=6.5.3",
     "PySide6-stubs>=6.4.2.0",
+    "nuitka>=1.8.5",
 ]
 requires-python = ">=3.7,<3.11"
 readme = "README.md"

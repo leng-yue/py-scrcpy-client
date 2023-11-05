@@ -5,6 +5,7 @@ from typing import Optional
 
 import numpy as np
 from PySide6 import QtCore
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from adbutils import adb
@@ -27,7 +28,7 @@ def get_formatted_bitrate(bitrate):
 
 
 class MainWindow(QMainWindow):
-    onMouseReleased = QtCore.Signal(QMouseEvent)
+    onMouseReleased = QtCore.Signal(QPoint)
 
     def __init__(
             self,
@@ -142,9 +143,10 @@ class MainWindow(QMainWindow):
             self.ui.button_record_click.setText("Start Recording Clicks")
             self.ui.button_record_click.setStyleSheet("background-color: green")
             self.logger.info("Stop record click event", self.mouse_recorder)
+            QMessageBox.information(self, "鼠标记录", f"鼠标记录已经保存在{self.mouse_recorder.save_dir}目录下的mouse_records.txt中")
 
     def on_click_take_region_screenshot(self):
-        ...
+        QMessageBox.information(self, "选择截屏区域工具", "还没完成呢，等我写完再来吧！")
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
@@ -155,18 +157,19 @@ class MainWindow(QMainWindow):
             self.client.control.touch(
                 evt.position().x() / ratio, evt.position().y() / ratio, action
             )
-            self.on_mouse_moved(evt)
+            pos = QPoint(round(evt.position().x() / ratio), round(evt.position().y() / ratio))
+            self.on_mouse_moved(pos)
 
             # if is release, call on_mouse_released
             if action == scrcpy.ACTION_UP:
-                self.onMouseReleased.emit(evt)
+
+                self.onMouseReleased.emit(pos)
 
         return handler
 
-    def on_mouse_moved(self, evt: QMouseEvent):
+    def on_mouse_moved(self, pos: QPoint):
         # update ui
-        ratio = self.max_width / max(self.client.resolution)
-        self.ui.label_mouse_pos.setText(f"{evt.position().x() / ratio:.0f}, {evt.position().y() / ratio:.0f}")
+        self.ui.label_mouse_pos.setText(f"{pos.x()}, {pos.y()}")
 
     def on_key_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QKeyEvent):
@@ -256,7 +259,7 @@ def main():
         "--max_width",
         type=int,
         default=1280,
-        help="Set max width of the window, default 800",
+        help="Set max width of the window, default 1280",
     )
     parser.add_argument(
         "-d",
