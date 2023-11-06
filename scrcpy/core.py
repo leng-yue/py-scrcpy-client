@@ -1,4 +1,5 @@
 import os
+import queue
 import socket
 import struct
 import threading
@@ -16,8 +17,7 @@ from .const import (
     EVENT_DISCONNECT,
     EVENT_FRAME,
     EVENT_INIT,
-    LOCK_SCREEN_ORIENTATION_UNLOCKED,
-)
+    LOCK_SCREEN_ORIENTATION_UNLOCKED, )
 from .control import ControlSender
 
 
@@ -83,10 +83,10 @@ class Client:
         if device is None:
             device = adb.device_list()[0]
         elif isinstance(device, str):
-            device = adb.device(serial=device)
+            device = adb.buffer(serial=device)
 
         self.device = device
-        self.listeners = dict(frame=[], init=[], disconnect=[])
+        self.listeners = dict(frame=[], init=[], disconnect=[], stream_init=[])
 
         # User accessible
         self.last_frame: Optional[np.ndarray] = None
@@ -103,6 +103,10 @@ class Client:
 
         # Available if start with threaded or daemon_threaded
         self.stream_loop_thread = None
+
+        # Buffer
+        self.buffer = queue.SimpleQueue()
+        self.frame_buffer = queue.SimpleQueue()
 
     def __init_server_connection(self) -> None:
         """
@@ -202,6 +206,15 @@ class Client:
         else:
             self.__stream_loop()
 
+    def start_stream_connection(self) -> None:
+        if self.alive:
+            time.sleep(0.01)
+            return
+        self.__deploy_server()
+        self.__init_server_connection()
+        self.alive = True
+        self.__send_to_listeners(EVENT_INIT)
+
     def stop(self) -> None:
         """
         Stop listening (both threaded and blocked)
@@ -241,6 +254,7 @@ class Client:
         while self.alive:
             try:
                 raw_h264 = self.__video_socket.recv(0x10000)
+                # self.buffer.put(raw_h264)
                 if raw_h264 == b"":
                     raise ConnectionError("Video stream is disconnected")
                 packets = codec.parse(raw_h264)
@@ -294,3 +308,7 @@ class Client:
         """
         for fun in self.listeners[cls]:
             fun(*args, **kwargs)
+
+    @property
+    def video_socket(self) -> socket.socket:
+        return self.__video_socket

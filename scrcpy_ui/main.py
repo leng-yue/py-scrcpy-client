@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from adbutils import adb
 
 import scrcpy
+from .frame_viewer import FrameViewer
 from .logger import Logger
 from .ui import Ui_MainWindow
 from .utils.mouse_recorder import MouseRecorder
@@ -93,6 +94,9 @@ class MainWindow(QMainWindow):
         # move to left top
         self.move(0, 0)
 
+        # region selector
+        self.region_selector = None
+
     def choose_device(self, device):
         if device not in self.devices:
             msgBox = QMessageBox()
@@ -105,7 +109,7 @@ class MainWindow(QMainWindow):
         # Restart service
         if getattr(self, "client", None):
             self.client.stop()
-            self.client.device = adb.device(serial=device)
+            self.client.device = adb.buffer(serial=device)
 
     def list_devices(self):
         self.ui.combo_device.clear()
@@ -143,10 +147,23 @@ class MainWindow(QMainWindow):
             self.ui.button_record_click.setText("Start Recording Clicks")
             self.ui.button_record_click.setStyleSheet("background-color: green")
             self.logger.info("Stop record click event", self.mouse_recorder)
-            QMessageBox.information(self, "鼠标记录", f"鼠标记录已经保存在{self.mouse_recorder.save_dir}目录下的mouse_records.txt中")
+            QMessageBox.information(self, "鼠标记录",
+                                    f"鼠标记录已经保存在{self.mouse_recorder.save_dir}目录下的mouse_records.txt中")
 
     def on_click_take_region_screenshot(self):
-        QMessageBox.information(self, "选择截屏区域工具", "还没完成呢，等我写完再来吧！")
+        self.region_selector = FrameViewer()
+        self.region_selector.show()
+        frame = self.client.last_frame.copy()
+        image = QImage(
+            frame,
+            frame.shape[1],
+            frame.shape[0],
+            frame.shape[1] * 3,
+            QImage.Format_BGR888,
+        )
+        pix = QPixmap(image)
+        self.region_selector.set_pixmap(pix)
+        del frame, image, pix
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
@@ -162,7 +179,6 @@ class MainWindow(QMainWindow):
 
             # if is release, call on_mouse_released
             if action == scrcpy.ACTION_UP:
-
                 self.onMouseReleased.emit(pos)
 
         return handler
@@ -213,6 +229,8 @@ class MainWindow(QMainWindow):
 
     def on_init(self):
         self.setWindowTitle(f"Serial: {self.client.device_name}")
+        # self.video_player = VideoStreamPlayer(self.video_widget, self.client.buffer)
+        # self.video_player.play()
 
     def on_frame(self, frame: np.ndarray):
         QApplication.processEvents()
@@ -281,5 +299,5 @@ def main():
     m.show()
 
     m.client.start()
-    while m.alive:
+    while m.client.alive:
         m.client.start()
