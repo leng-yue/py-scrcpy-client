@@ -72,6 +72,8 @@ dependencies = [
     "pyside6>=6.5.3",
     "PySide6-stubs>=6.4.2.0",
     "nuitka>=1.8.5",
+    "pipdeptree>=2.9.6",
+    "pip>=23.3.1",
 ]
 requires-python = ">=3.7,<3.11"
 readme = "README.md"

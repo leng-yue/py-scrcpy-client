@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 from PySide6 import QtCore
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap
+from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, QWheelEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from adbutils import adb
 
@@ -18,11 +18,11 @@ from .utils.mouse_recorder import MouseRecorder
 
 
 def get_formatted_bitrate(bitrate):
-    if bitrate < 2 ** 10:
+    if bitrate < 2**10:
         return f"{bitrate} bps"
-    elif bitrate < 2 ** 20:
+    elif bitrate < 2**20:
         return f"{bitrate / 2 ** 10:.2f} Kbps"
-    elif bitrate < 2 ** 30:
+    elif bitrate < 2**30:
         return f"{bitrate / 2 ** 20:.2f} Mbps"
     else:
         return f"{bitrate / 2 ** 30:.2f} Gbps"
@@ -32,10 +32,12 @@ class MainWindow(QMainWindow):
     onMouseReleased = QtCore.Signal(QPoint)
 
     def __init__(
-            self,
-            max_width: Optional[int],
-            serial: Optional[str] = None,
-            encoder_name: Optional[str] = None,
+        self,
+        max_width: Optional[int],
+        serial: Optional[str] = None,
+        encoder_name: Optional[str] = None,
+        max_fps: Optional[int] = None,
+        bitrate: Optional[int] = None,
     ):
         super(MainWindow, self).__init__()
         self.__frame_time_window = queue.Queue(10)
@@ -55,7 +57,8 @@ class MainWindow(QMainWindow):
         self.client = scrcpy.Client(
             device=self.device,
             flip=self.ui.flip.isChecked(),
-            bitrate=1_000_000_000,
+            bitrate=bitrate or 1_000_000_000,
+            max_fps=max_fps or 30,
             encoder_name=encoder_name,
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
@@ -82,6 +85,7 @@ class MainWindow(QMainWindow):
         self.ui.label.mousePressEvent = self.on_mouse_event(scrcpy.ACTION_DOWN)
         self.ui.label.mouseMoveEvent = self.on_mouse_event(scrcpy.ACTION_MOVE)
         self.ui.label.mouseReleaseEvent = self.on_mouse_event(scrcpy.ACTION_UP)
+        self.ui.label.wheelEvent = self.on_mouse_wheel_event
 
         # Keyboard event
         self.keyPressEvent = self.on_key_event(scrcpy.ACTION_DOWN)
@@ -96,6 +100,12 @@ class MainWindow(QMainWindow):
 
         # region selector
         self.region_selector = None
+
+        # video player
+        # self.video_player = None
+        # self.video_widget = QVideoWidget()
+        # self.video_widget.setFixedSize(1280, 720)
+        # self.video_widget.show()
 
     def choose_device(self, device):
         if device not in self.devices:
@@ -147,8 +157,11 @@ class MainWindow(QMainWindow):
             self.ui.button_record_click.setText("Start Recording Clicks")
             self.ui.button_record_click.setStyleSheet("background-color: green")
             self.logger.info("Stop record click event", self.mouse_recorder)
-            QMessageBox.information(self, "鼠标记录",
-                                    f"鼠标记录已经保存在{self.mouse_recorder.save_dir}目录下的mouse_records.txt中")
+            QMessageBox.information(
+                self,
+                "鼠标记录",
+                f"鼠标记录已经保存在{self.mouse_recorder.save_dir}目录下的mouse_records.txt中",
+            )
 
     def on_click_take_region_screenshot(self):
         self.region_selector = FrameViewer()
@@ -174,7 +187,9 @@ class MainWindow(QMainWindow):
             self.client.control.touch(
                 evt.position().x() / ratio, evt.position().y() / ratio, action
             )
-            pos = QPoint(round(evt.position().x() / ratio), round(evt.position().y() / ratio))
+            pos = QPoint(
+                round(evt.position().x() / ratio), round(evt.position().y() / ratio)
+            )
             self.on_mouse_moved(pos)
 
             # if is release, call on_mouse_released
@@ -182,6 +197,16 @@ class MainWindow(QMainWindow):
                 self.onMouseReleased.emit(pos)
 
         return handler
+
+    def on_mouse_wheel_event(self, evt: QWheelEvent):
+        start_pos = evt.position()
+        ratio = self.max_width / max(self.client.resolution)
+        self.client.control.scroll(
+            start_pos.x() / ratio,
+            start_pos.y() / ratio,
+            0,
+            evt.angleDelta().y() / 60,
+        )
 
     def on_mouse_moved(self, pos: QPoint):
         # update ui
@@ -255,7 +280,9 @@ class MainWindow(QMainWindow):
                 last_frame_time = self.__frame_time_window.get_nowait()
                 self.__frame_time_window.put_nowait(cur_frame_time := time.time())
                 frames = self.__frame_time_window.maxsize
-                self.ui.label_fps.setText(f"{frames / (cur_frame_time - last_frame_time):.2f}")
+                self.ui.label_fps.setText(
+                    f"{frames / (cur_frame_time - last_frame_time):.2f}"
+                )
 
             h, w, _ = frame.shape
             self.ui.label_resolution.setText(f"{w} * {h}")
@@ -276,7 +303,7 @@ def main():
         "-m",
         "--max_width",
         type=int,
-        default=1280,
+        default=960,
         help="Set max width of the window, default 1280",
     )
     parser.add_argument(
@@ -284,6 +311,20 @@ def main():
         "--device",
         type=str,
         help="Select device manually (device serial required)",
+    )
+    parser.add_argument(
+        "-s",
+        "--max_fps",
+        type=int,
+        default=60,
+        help="Set max fps of the window, default 30, 30 ~ 60 is recommended",
+    )
+    parser.add_argument(
+        "-b",
+        "--bitrate",
+        type=int,
+        default=8_000_000,
+        help="Set bitrate of the video, default 8Mbps",
     )
     parser.add_argument("--encoder_name", type=str, help="Encoder name to use")
     args = parser.parse_args()
@@ -294,10 +335,19 @@ def main():
         app = QApplication.instance()
 
     app.setApplicationName("PyScrcpyClient")
-
-    m = MainWindow(args.max_width, args.device, args.encoder_name)
+    try:
+        m = MainWindow(
+            args.max_width, args.device, args.encoder_name, args.max_fps, args.bitrate
+        )
+    except RuntimeError as e:
+        QMessageBox.critical(
+            None,
+            "ADB Error",
+            e.args[0],
+            QMessageBox.StandardButton.Ok,
+        )
+        return
     m.show()
-
     m.client.start()
     while m.client.alive:
         m.client.start()

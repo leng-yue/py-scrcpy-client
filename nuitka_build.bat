@@ -5,8 +5,8 @@ python -m nuitka ^
     --company-name="ACGN-Alliance" ^
     --product-name="BlueArchive-Starter-Develop-Tools" ^
     --windows-icon-from-ico=bas.ico ^
-    --file-version="0.0.1" ^
-    --product-version="0.0.1" ^
+    --file-version="0.1.1" ^
+    --product-version="0.1.1" ^
     --windows-file-description="Develop Tools for BAS" ^
     --copyright="Copyright @ACGN-Alliance. All right reserved." ^
     --remove-output ^

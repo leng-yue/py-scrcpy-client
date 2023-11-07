@@ -45,19 +45,16 @@ class SimpleQueueWrapper(QIODevice):
 class VideoStreamPlayer(QMediaPlayer):
     onScreenShot = QtCore.Signal(QImage, QtCore.QSize)
 
-    def __init__(self, video_widget: QVideoWidget, buffer: queue.SimpleQueue[bytes], parent=None):
+    def __init__(self, video_widget: QVideoWidget, device: QIODevice, parent=None):
         super().__init__(parent)
-
-        # buffer
-        self.simple_queue_wrapper = SimpleQueueWrapper(buffer)
-        self.simple_queue_wrapper.open(QIODevice.ReadWrite)
+        self.device = device
 
         # widget ref
         self.video_widget = video_widget
 
         # self settings
         self.setVideoOutput(video_widget)
-        self.setSourceDevice(self.simple_queue_wrapper)
+        self.setSourceDevice(self.device)
         self.screen_shot_surface = QVideoSink()
 
         # bind signal

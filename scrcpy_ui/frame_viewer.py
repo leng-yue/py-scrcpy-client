@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 
@@ -218,14 +219,14 @@ class FrameViewer(QWidget):
         os.makedirs("regions", exist_ok=True)
         pixmap.save(f"regions/{region_name}.png")
         with open(f"regions/regions.txt", 'a') as f:
-            data = {
+            f.write(json.dumps({
                 "name": region_name,
                 "point1": [x1, y1],
                 "point2": [x2, y2],
                 "size": [x2 - x1, y2 - y1],
                 "resolution": [width, height],
-            }
-            f.write(json.dumps(data, indent=4, ensure_ascii=False))
+                "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            }, ensure_ascii=False))
         QMessageBox.information(self, "保存成功", f"保存成功, 保存为regions/{region_name}.png")
 
     def on_timeout(self):

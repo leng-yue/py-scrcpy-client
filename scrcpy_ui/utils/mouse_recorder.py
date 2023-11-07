@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import queue
@@ -22,7 +23,7 @@ class MouseRecord(QObject):
 class MouseRecordProcessor(QThread):
     onRecordSaved = QtCore.Signal(str, int, int)
 
-    def __init__(self, queue: queue.Queue[Optional[MouseRecord]], save_dir:str):
+    def __init__(self, queue: queue.Queue[Optional[MouseRecord]], save_dir: str):
         super().__init__()
         self.queue = queue
         self.count = 0
@@ -50,17 +51,28 @@ class MouseRecordProcessor(QThread):
             # 绘制一个横着的线
             cv2.line(frame, (0, pos.y()), (width, pos.y()), (0, 0, 255), 2)
 
+            os.makedirs(self.save_dir, exist_ok=True)
             # 保存frame
             cv2.imwrite(f"{self.save_dir}/{record_name}.png", frame)
             # 保存记录
-            with open(f"{self.save_dir}/mouse_records.txt", "a", encoding='utf-8') as f:
-                record_entry = json.dumps({
-                    "pos": [pos.x(), pos.y()],
-                    "window_size": [width, height],
-                    "relative_pos": [f"{100 * pos.x() / width:.0f}", f'{100 * pos.y() / height:.0f}'],
-                    "frame": f"{record_name}.png"
-                }, indent=4, ensure_ascii=False)
-                f.write(f'{record_name} = {record_entry}\n')
+            with open(f"{self.save_dir}/mouse_records.txt", "a", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "name": record_name,
+                        "pos": [int(pos.x()), int(pos.y())],
+                        "window_size": [width, height],
+                        "relative_pos": [
+                            int(100 * pos.x() / width),
+                            int(100 * pos.y() / height),
+                        ],
+                        "frame": f"{record_name}.png",
+                        "time": datetime.datetime.now().strftime(
+                            "%Y-%m-%d %H:%M:%S.%f"
+                        )[:-3],
+                    },
+                    f,
+                    ensure_ascii=False,
+                )
 
             self.onRecordSaved.emit(record_name, pos.x(), pos.y())
             record.deleteLater()  # 释放内存
@@ -68,13 +80,15 @@ class MouseRecordProcessor(QThread):
 
 
 class MouseRecorder(QObject):
-    def __init__(self, client: scrcpy.Client,save_dir: Optional[str] = None):
+    def __init__(self, client: scrcpy.Client, save_dir: Optional[str] = None):
         super().__init__()
         self.__mouse_records = queue.Queue()
         self.__is_recording = False
         self.client = client
-        self.save_dir = save_dir or 'mouse_records'
-        self.processor = MouseRecordProcessor(self.__mouse_records, save_dir=self.save_dir)
+        self.save_dir = save_dir or "mouse_records"
+        self.processor = MouseRecordProcessor(
+            self.__mouse_records, save_dir=self.save_dir
+        )
         self.logger = Logger.get_logger()
 
         self.processor.started.connect(self.on_process_started)
@@ -92,7 +106,10 @@ class MouseRecorder(QObject):
         self.logger.debug(msg="thread started", sender=self.processor)
 
     def on_processor_saved(self, name: str, x: int, y: int):
-        self.logger.success(msg=f"Mouse Click Event Recorded: {name=} ({x=}, {y=})", sender=self.processor)
+        self.logger.success(
+            msg=f"Mouse Click Event Recorded: {name=} ({x=}, {y=})",
+            sender=self.processor,
+        )
 
     def start_record(self):
         self.__is_recording = True
