@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
         if getattr(self, "client", None):
             self.client.stop()
             self.client.device = adb.device(serial=device)
-            self.serial=device
+            self.serial = device
 
     def list_devices(self):
         self.ui.combo_device.clear()
@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
             self.ui.label_resolution.setText(f"{w} * {h}")
 
     def closeEvent(self, _):
-        self.serial= None
+        self.serial = None
         self.close_window()
         QApplication.quit()
 
@@ -300,7 +300,6 @@ class MainWindow(QMainWindow):
         self.client.stop()
         self.alive = False
         self.mouse_recorder.stop_processor()
-
 
 
 def main():
@@ -357,13 +356,11 @@ def main():
     m.show()
     m.client.start()
     m.close_window()
-    while (s:=m.serial):
+    while s := m.serial:
         m.deleteLater()
-        m.destroy(True,True)
+        m.destroy(True, True)
         app.processEvents()
-        m = MainWindow(
-            args.max_width, s, args.encoder_name, args.max_fps, args.bitrate
-        )
+        m = MainWindow(args.max_width, s, args.encoder_name, args.max_fps, args.bitrate)
         m.show()
         m.client.start()
         m.close_window()

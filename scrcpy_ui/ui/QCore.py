@@ -22,11 +22,12 @@ from scrcpy.const import (
 )
 from scrcpy.control import ControlSender
 
+
 class QClient(QObject):
     eventDisconnect = Signal()
     eventFrame = Signal(object)
-    eventInit=Signal()
-    eventScreenOrientationUnlocked=Signal()
+    eventInit = Signal()
+    eventScreenOrientationUnlocked = Signal()
 
     def __init__(
         self,
