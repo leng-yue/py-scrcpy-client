@@ -30,15 +30,15 @@ class Logger(QWidget):
         self.ui.setupUi(self)
         self.ui.textBrowser.setReadOnly(True)
         self.color_option = color_option or ColorOption(
-            info='black',
-            warn='orange',
-            error='red',
-            debug='blue',
-            critical='red',
-            success='green'
+            info="black",
+            warn="orange",
+            error="red",
+            debug="blue",
+            critical="red",
+            success="green",
         )
         self.setWindowFlag(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setWindowTitle('Logger')
+        self.setWindowTitle("Logger")
 
         self.setMinimumSize(500, 600)
 
@@ -50,38 +50,40 @@ class Logger(QWidget):
 
     @classmethod
     def info(cls, msg, sender=None):
-        cls.log(msg, 'info', sender)
+        cls.log(msg, "info", sender)
 
     @classmethod
     def warn(cls, msg, sender=None):
-        cls.log(msg, 'warn', sender)
+        cls.log(msg, "warn", sender)
 
     @classmethod
     def error(cls, msg, sender=None):
-        cls.log(msg, 'error', sender)
+        cls.log(msg, "error", sender)
 
     @classmethod
     def debug(cls, msg, sender=None):
-        cls.log(msg, 'debug', sender)
+        cls.log(msg, "debug", sender)
 
     @classmethod
     def critical(cls, msg, sender=None):
-        cls.log(msg, 'critical', sender)
+        cls.log(msg, "critical", sender)
 
     @classmethod
     def success(cls, msg, sender=None):
-        cls.log(msg, 'success', sender)
+        cls.log(msg, "success", sender)
 
     @classmethod
     def log(cls, msg, level, sender):
         instance = cls.instance
         sender = (sender or instance).__class__.__name__
         if not instance:
-            raise RuntimeError('Logger instance is not initialized. use Logger.get_instance() instead.')
+            raise RuntimeError(
+                "Logger instance is not initialized. use Logger.get_instance() instead."
+            )
         # time + Level + msg
-        log_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        log_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         color = instance.color_option.get_color(level)
-        if level != 'critical':
+        if level != "critical":
             msg = f'<font color="{color}">{log_time} [{level.upper()}] {sender}::{msg}</font>'
         else:
             # bold

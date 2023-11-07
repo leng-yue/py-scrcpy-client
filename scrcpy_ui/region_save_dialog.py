@@ -16,19 +16,22 @@ class RegionSaveDialog(QDialog):
     def exec0(self):
         ret = self.exec()
         if ret == QDialog.DialogCode.Accepted:
-            region_name = self.ui.line_edit_region_name.placeholderText() or self.ui.line_edit_region_name.text()
+            region_name = (
+                self.ui.line_edit_region_name.placeholderText()
+                or self.ui.line_edit_region_name.text()
+            )
             return region_name
         else:
             return None
 
     @staticmethod
     def show_dialog(
-            resolution: tuple[int, int],
-            point1: tuple[int, int],
-            point2: tuple[int, int],
-            region_size: tuple[int, int],
-            pixmap: QPixmap,
-            default_name: str = ""
+        resolution: tuple[int, int],
+        point1: tuple[int, int],
+        point2: tuple[int, int],
+        region_size: tuple[int, int],
+        pixmap: QPixmap,
+        default_name: str = "",
     ):
         instance = RegionSaveDialog()
         instance.ui.label_resolution.setText(f"{resolution[0]}x{resolution[1]}")

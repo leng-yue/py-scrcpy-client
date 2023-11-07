@@ -5,7 +5,14 @@ import os
 import PySide6
 from PySide6.QtCore import Signal, Qt, QRectF, QObject, QTimer
 from PySide6.QtGui import QPixmap, QPen, QColor
-from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem, QGraphicsPixmapItem, QWidget, QMessageBox
+from PySide6.QtWidgets import (
+    QGraphicsView,
+    QGraphicsScene,
+    QGraphicsItem,
+    QGraphicsPixmapItem,
+    QWidget,
+    QMessageBox,
+)
 
 from scrcpy_ui.region_save_dialog import RegionSaveDialog
 from .ui import Ui_FrameViewer
@@ -44,7 +51,7 @@ class GraphicsView(QGraphicsView):
         # self.scale(1, 1)
 
     def wheelEvent(self, event):
-        '''滚轮事件'''
+        """滚轮事件"""
         zoomInFactor = 1.25
         zoomOutFactor = 1 / zoomInFactor
 
@@ -57,7 +64,7 @@ class GraphicsView(QGraphicsView):
         self.onZoom.emit(zoomFactor)
 
     def mouseReleaseEvent(self, event):
-        '''鼠标释放事件'''
+        """鼠标释放事件"""
         # print(self.image_item.is_finish_cut, self.image_item.is_start_cut)
         if self.image_item.is_finish_cut:
             self.save_signal.emit(True)
@@ -80,16 +87,18 @@ class GraphicsPixmapItem(QGraphicsPixmapItem, QObject):
         self.is_finish_cut = False
 
     def mouseMoveEvent(self, event):
-        '''鼠标移动事件'''
+        """鼠标移动事件"""
         self.current_point = event.pos()
         if not self.is_start_cut or self.is_midbutton:
-            self.moveBy(self.current_point.x() - self.start_point.x(),
-                        self.current_point.y() - self.start_point.y())
+            self.moveBy(
+                self.current_point.x() - self.start_point.x(),
+                self.current_point.y() - self.start_point.y(),
+            )
             self.is_finish_cut = False
         self.update()
 
     def mousePressEvent(self, event):
-        '''鼠标按压事件'''
+        """鼠标按压事件"""
         super(GraphicsPixmapItem, self).mousePressEvent(event)
         self.start_point = event.pos()
         self.current_point = None
@@ -102,7 +111,9 @@ class GraphicsPixmapItem(QGraphicsPixmapItem, QObject):
             self.update()
 
     def paint(self, painter, QStyleOptionGraphicsItem, QWidget):
-        super(GraphicsPixmapItem, self).paint(painter, QStyleOptionGraphicsItem, QWidget)
+        super(GraphicsPixmapItem, self).paint(
+            painter, QStyleOptionGraphicsItem, QWidget
+        )
         if self.is_start_cut and not self.is_midbutton:
             # print(self.start_point, self.current_point)
             pen = QPen(Qt.DashLine)
@@ -161,7 +172,9 @@ class FrameViewer(QWidget):
         self.check_point_timer.start()
 
     def on_zoom(self, zoom: float):
-        self.ui.label_picture_zoom.setText(f"{zoom * float(self.ui.label_picture_zoom.text()):.2f}")
+        self.ui.label_picture_zoom.setText(
+            f"{zoom * float(self.ui.label_picture_zoom.text()):.2f}"
+        )
 
     def on_click_take_region(self):
         self.ui.graphicsView.image_item.is_start_cut = True
@@ -210,7 +223,7 @@ class FrameViewer(QWidget):
             point2=(x2, y2),
             region_size=(x2 - x1, y2 - y1),
             pixmap=pixmap,
-            default_name=default_name
+            default_name=default_name,
         )
         if region_name is None:
             return
@@ -218,15 +231,21 @@ class FrameViewer(QWidget):
             self.counter += 1
         os.makedirs("regions", exist_ok=True)
         pixmap.save(f"regions/{region_name}.png")
-        with open(f"regions/regions.txt", 'a') as f:
-            f.write(json.dumps({
-                "name": region_name,
-                "point1": [x1, y1],
-                "point2": [x2, y2],
-                "size": [x2 - x1, y2 - y1],
-                "resolution": [width, height],
-                "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            }, ensure_ascii=False))
+        with open(f"regions/regions.txt", "a") as f:
+            data = json.dumps(
+                {
+                    "name": region_name,
+                    "point1": [x1, y1],
+                    "point2": [x2, y2],
+                    "size": [x2 - x1, y2 - y1],
+                    "resolution": [width, height],
+                    "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[
+                        :-3
+                    ],
+                },
+                ensure_ascii=False,
+            )
+            f.write(data + "\n")
         QMessageBox.information(self, "保存成功", f"保存成功, 保存为regions/{region_name}.png")
 
     def on_timeout(self):
@@ -251,15 +270,20 @@ class FrameViewer(QWidget):
         if point is None:
             return
         self.ui.label_region_point2.setText(f"{point.x():.0f}, {point.y():.0f}")
-        region_size = self.ui.graphicsView.image_item.end_point - self.ui.graphicsView.image_item.start_point
-        self.ui.label_region_size.setText(f"{abs(region_size.x()):.0f}, {abs(region_size.y()):.0f}")
+        region_size = (
+            self.ui.graphicsView.image_item.end_point
+            - self.ui.graphicsView.image_item.start_point
+        )
+        self.ui.label_region_size.setText(
+            f"{abs(region_size.x()):.0f}, {abs(region_size.y()):.0f}"
+        )
 
 
 def profile_func(frame, event, arg):
     print(frame, event, arg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
 

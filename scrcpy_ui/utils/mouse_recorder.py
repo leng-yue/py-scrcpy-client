@@ -30,7 +30,6 @@ class MouseRecordProcessor(QThread):
         self.save_dir = save_dir  # 保存目录
 
     def run(self) -> None:
-        os.makedirs(self.save_dir, exist_ok=True)
         print("MouseRecordProcessor started")
         while True:
             record: MouseRecord = self.queue.get()
@@ -56,7 +55,7 @@ class MouseRecordProcessor(QThread):
             cv2.imwrite(f"{self.save_dir}/{record_name}.png", frame)
             # 保存记录
             with open(f"{self.save_dir}/mouse_records.txt", "a", encoding="utf-8") as f:
-                json.dump(
+                data = json.dumps(
                     {
                         "name": record_name,
                         "pos": [int(pos.x()), int(pos.y())],
@@ -70,9 +69,9 @@ class MouseRecordProcessor(QThread):
                             "%Y-%m-%d %H:%M:%S.%f"
                         )[:-3],
                     },
-                    f,
                     ensure_ascii=False,
                 )
+                f.write(data + "\n")
 
             self.onRecordSaved.emit(record_name, pos.x(), pos.y())
             record.deleteLater()  # 释放内存

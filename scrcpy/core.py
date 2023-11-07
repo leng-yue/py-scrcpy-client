@@ -17,23 +17,24 @@ from .const import (
     EVENT_DISCONNECT,
     EVENT_FRAME,
     EVENT_INIT,
-    LOCK_SCREEN_ORIENTATION_UNLOCKED, )
+    LOCK_SCREEN_ORIENTATION_UNLOCKED,
+)
 from .control import ControlSender
 
 
 class Client:
     def __init__(
-            self,
-            device: Optional[Union[AdbDevice, str, any]] = None,
-            max_width: int = 0,
-            bitrate: int = 8000000,
-            max_fps: int = 0,
-            flip: bool = False,
-            block_frame: bool = False,
-            stay_awake: bool = False,
-            lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
-            connection_timeout: int = 3000,
-            encoder_name: Optional[str] = None,
+        self,
+        device: Optional[Union[AdbDevice, str, any]] = None,
+        max_width: int = 0,
+        bitrate: int = 8000000,
+        max_fps: int = 0,
+        flip: bool = False,
+        block_frame: bool = False,
+        stay_awake: bool = False,
+        lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
+        connection_timeout: int = 3000,
+        encoder_name: Optional[str] = None,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -55,10 +56,10 @@ class Client:
         assert bitrate >= 0, "bitrate must be greater than or equal to 0"
         assert max_fps >= 0, "max_fps must be greater than or equal to 0"
         assert (
-                -1 <= lock_screen_orientation <= 3
+            -1 <= lock_screen_orientation <= 3
         ), "lock_screen_orientation must be LOCK_SCREEN_ORIENTATION_*"
         assert (
-                connection_timeout >= 0
+            connection_timeout >= 0
         ), "connection_timeout must be greater than or equal to 0"
         assert encoder_name in [
             None,
