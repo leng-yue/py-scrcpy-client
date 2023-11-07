@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         bitrate: Optional[int] = None,
     ):
         super(MainWindow, self).__init__()
+        self.serial = serial
         self.__frame_time_window = queue.Queue(10)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -119,7 +120,8 @@ class MainWindow(QMainWindow):
         # Restart service
         if getattr(self, "client", None):
             self.client.stop()
-            self.client.device = adb.buffer(serial=device)
+            self.client.device = adb.device(serial=device)
+            self.serial=device
 
     def list_devices(self):
         self.ui.combo_device.clear()
@@ -288,17 +290,23 @@ class MainWindow(QMainWindow):
             self.ui.label_resolution.setText(f"{w} * {h}")
 
     def closeEvent(self, _):
+        self.serial= None
+        self.close_window()
+        QApplication.quit()
+
+    def close_window(self):
         self.mouse_recorder.stop_record()
 
         self.client.stop()
         self.alive = False
         self.mouse_recorder.stop_processor()
 
-        QApplication.quit()
 
 
 def main():
-    parser = ArgumentParser(description="A simple scrcpy client")
+    parser = ArgumentParser(
+        description="A simple scrcpy client",
+    )
     parser.add_argument(
         "-m",
         "--max_width",
@@ -333,7 +341,6 @@ def main():
         app = QApplication([])
     else:
         app = QApplication.instance()
-
     app.setApplicationName("PyScrcpyClient")
     try:
         m = MainWindow(
@@ -349,5 +356,14 @@ def main():
         return
     m.show()
     m.client.start()
-    while m.client.alive:
+    m.close_window()
+    while (s:=m.serial):
+        m.deleteLater()
+        m.destroy(True,True)
+        app.processEvents()
+        m = MainWindow(
+            args.max_width, s, args.encoder_name, args.max_fps, args.bitrate
+        )
+        m.show()
         m.client.start()
+        m.close_window()

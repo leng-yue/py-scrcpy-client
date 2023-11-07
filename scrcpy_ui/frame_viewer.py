@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
+from scrcpy_ui.logger import Logger
 from scrcpy_ui.region_save_dialog import RegionSaveDialog
 from .ui import Ui_FrameViewer
 
@@ -170,6 +171,7 @@ class FrameViewer(QWidget):
         self.check_point_timer.setSingleShot(False)
         self.check_point_timer.timeout.connect(self.on_timeout)
         self.check_point_timer.start()
+        Logger.success("图片加载成功", self)
 
     def on_zoom(self, zoom: float):
         self.ui.label_picture_zoom.setText(
@@ -180,11 +182,13 @@ class FrameViewer(QWidget):
         self.ui.graphicsView.image_item.is_start_cut = True
         self.ui.graphicsView.image_item.is_finish_cut = False
         self.ui.graphicsView.image_item.update()
+        Logger.info("开始选区", self)
 
     def on_click_cancel_region(self):
         self.ui.graphicsView.image_item.is_start_cut = False
         self.ui.graphicsView.image_item.is_finish_cut = False
         self.ui.graphicsView.image_item.update()
+        Logger.info("取消选区", self)
 
     def clean_point_labels_text(self):
         self.ui.label_region_point1.setText("-1, -1")
@@ -226,6 +230,7 @@ class FrameViewer(QWidget):
             default_name=default_name,
         )
         if region_name is None:
+            Logger.info("取消保存选区", self)
             return
         if region_name == default_name:
             self.counter += 1
@@ -247,6 +252,7 @@ class FrameViewer(QWidget):
             )
             f.write(data + "\n")
         QMessageBox.information(self, "保存成功", f"保存成功, 保存为regions/{region_name}.png")
+        Logger.success(f"保存成功, 保存为regions/{region_name}.png", self)
 
     def on_timeout(self):
         self.on_start_point_changed()
@@ -286,8 +292,6 @@ def profile_func(frame, event, arg):
 if __name__ == "__main__":
     import sys
     from PySide6.QtWidgets import QApplication
-
-    # sys.setprofile(profile_func)
 
     app = QApplication(sys.argv)
     view = FrameViewer()

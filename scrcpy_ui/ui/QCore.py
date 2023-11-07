@@ -9,20 +9,25 @@ from typing import Any, Callable, Optional, Tuple, Union
 
 import cv2
 import numpy as np
+from PySide6.QtCore import QObject, Signal, QThread
 from adbutils import AdbConnection, AdbDevice, AdbError, Network, adb
 from av.codec import CodecContext
 from av.error import InvalidDataError
 
-from .const import (
+from scrcpy.const import (
     EVENT_DISCONNECT,
     EVENT_FRAME,
     EVENT_INIT,
     LOCK_SCREEN_ORIENTATION_UNLOCKED,
 )
-from .control import ControlSender
+from scrcpy.control import ControlSender
 
+class QClient(QObject):
+    eventDisconnect = Signal()
+    eventFrame = Signal(object)
+    eventInit=Signal()
+    eventScreenOrientationUnlocked=Signal()
 
-class Client:
     def __init__(
         self,
         device: Optional[Union[AdbDevice, str, any]] = None,
@@ -52,6 +57,7 @@ class Client:
             encoder_name: encoder name, enum: [OMX.google.h264.encoder, OMX.qcom.video.encoder.avc, c2.qti.avc.encoder, c2.android.avc.encoder], default is None (Auto)
         """
         # Check Params
+        super().__init__()
         assert max_width >= 0, "max_width must be greater than or equal to 0"
         assert bitrate >= 0, "bitrate must be greater than or equal to 0"
         assert max_fps >= 0, "max_fps must be greater than or equal to 0"
@@ -107,6 +113,13 @@ class Client:
 
         # Buffer
         self.event_buffer = queue.Queue()
+
+        # event map
+        self.__event_map = {
+            EVENT_DISCONNECT: self.eventDisconnect,
+            EVENT_FRAME: self.eventFrame,
+            EVENT_INIT: self.eventInit,
+        }
 
     def __init_server_connection(self) -> None:
         """
@@ -285,8 +298,6 @@ class Client:
                     self.__send_to_listeners(EVENT_DISCONNECT)
                     self.stop()
                     raise e
-            except Exception as e:
-                print(e)
 
     def _async_stream_loop(self) -> None:
         """
@@ -330,7 +341,9 @@ class Client:
             cls: Listener category, support: init, frame
             listener: A function to receive frame np.ndarray
         """
-        self.listeners[cls].append(listener)
+        signal = self.__event_map.get(cls)
+        if signal:
+            signal.connect(listener)
 
     def remove_listener(self, cls: str, listener: Callable[..., Any]) -> None:
         """
@@ -340,7 +353,9 @@ class Client:
             cls: Listener category, support: init, frame
             listener: A function to receive frame np.ndarray
         """
-        self.listeners[cls].remove(listener)
+        signal = self.__event_map.get(cls)
+        if signal:
+            signal.disconnect(listener)
 
     def __send_to_listeners(self, cls: str, *args, **kwargs) -> None:
         """
@@ -351,8 +366,9 @@ class Client:
             *args: Other arguments
             *kwargs: Other arguments
         """
-        for fun in self.listeners[cls]:
-            fun(*args, **kwargs)
+        signal = self.__event_map.get(cls)
+        if signal:
+            signal.emit(*args, **kwargs)
 
     @property
     def video_socket(self) -> socket.socket:

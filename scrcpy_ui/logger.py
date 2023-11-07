@@ -2,7 +2,7 @@ import dataclasses
 import time
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget
 
 from .ui import Ui_Logger
@@ -23,6 +23,7 @@ class ColorOption:
 
 class Logger(QWidget):
     instance = None
+    onLog = Signal(str)
 
     def __init__(self, color_option: ColorOption):
         super().__init__()
@@ -41,6 +42,7 @@ class Logger(QWidget):
         self.setWindowTitle("Logger")
 
         self.setMinimumSize(500, 600)
+        self.onLog.connect(self.ui.textBrowser.append)
 
     @classmethod
     def get_logger(cls, color_option: Optional[ColorOption] = None):
@@ -75,6 +77,10 @@ class Logger(QWidget):
     @classmethod
     def log(cls, msg, level, sender):
         instance = cls.instance
+        instance.__log(msg, level, sender)
+
+    def __log(self, msg, level, sender):
+        instance = self
         sender = (sender or instance).__class__.__name__
         if not instance:
             raise RuntimeError(
@@ -88,4 +94,4 @@ class Logger(QWidget):
         else:
             # bold
             msg = f'<font color="{color}"><b>{log_time} [{level.upper()}] {sender}::{msg}</b></font>'
-        instance.ui.textBrowser.append(msg)
+        self.onLog.emit(msg)
