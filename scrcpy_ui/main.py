@@ -375,5 +375,6 @@ def main():
         app.processEvents()
         m = MainWindow(args.max_width, s, args.encoder_name, args.max_fps, args.bitrate)
         m.show()
-        m.client.start()
+        m.client.start(daemon_thread=True)
+        m.client.event_dispatcher_thread_loop()
         m.close_window()
