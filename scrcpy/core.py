@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import queue
 import socket
@@ -104,9 +105,11 @@ class Client:
 
         # Available if start with threaded or daemon_threaded
         self.stream_loop_thread = None
+        self.stream_loop_process = None
 
         # Buffer
-        self.event_buffer = queue.Queue()
+        self.event_buffer_thread = queue.Queue()
+        self.event_buffer_process = multiprocessing.Queue()
 
     def __init_server_connection(self) -> None:
         """
@@ -180,13 +183,15 @@ class Client:
         # Wait for server to start
         self.__server_stream.read(10)
 
-    def start(self, threaded: bool = False, daemon: bool = False) -> None:
+    def start(self, daemon_thread: bool = False,daemon_process:bool=False) -> None:
         """
         Start listening video stream
 
         Args:
             threaded: Run stream loop in a different thread to avoid blocking
-            daemon: Run stream loop in a daemon thread to avoid blocking
+            daemon_thread: Run stream loop in a daemon thread to avoid blocking
+            daemon_process: Run stream loop in a daemon process to avoid blocking
+
         """
         assert self.alive is False
         if self.alive:
@@ -198,18 +203,32 @@ class Client:
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
 
-        if threaded or daemon:
+        if daemon_thread:
             self.stream_loop_thread = threading.Thread(
-                target=self._async_stream_loop, daemon=daemon
+                target=self._async_stream_loop, daemon=True
             )
             self.stream_loop_thread.start()
+        elif daemon_process:
+            self.stream_loop_process = multiprocessing.Process(
+                target=self._async_stream_loop, daemon=True
+            )
+            self.stream_loop_process.start()
         else:
             self.__stream_loop()
 
-    def event_dispatcher_loop(self):
+    def event_dispatcher_thread_loop(self):
         while self.alive:
             try:
-                event, data = self.event_buffer.get_nowait()
+                event, data = self.event_buffer_thread.get_nowait()
+                self.__send_to_listeners(event, data)
+                del event, data
+            except queue.Empty:
+                time.sleep(0.01)
+
+    def event_dispatcher_process_loop(self):
+        while self.alive:
+            try:
+                event, data = self.event_buffer_process.get_nowait()
                 self.__send_to_listeners(event, data)
                 del event, data
             except queue.Empty:
@@ -288,9 +307,10 @@ class Client:
             except Exception as e:
                 print(e)
 
-    def _async_stream_loop(self) -> None:
+    def _async_stream_loop(self,mode='thread') -> None:
         """
         Core loop for video parsing
+        :param mode: thread or process
         """
         codec = CodecContext.create("h264", "r")
         while self.alive:
@@ -309,16 +329,26 @@ class Client:
                         self.last_frame = frame
                         self.resolution = (frame.shape[1], frame.shape[0])
                         # self.__send_to_listeners(EVENT_FRAME, frame)
-                        self.event_buffer.put((EVENT_FRAME, frame))
+
+                        if mode == 'thread':
+                            self.event_buffer_thread.put((EVENT_FRAME, frame))
+                        elif mode == 'process':
+                            self.event_buffer_process.put((EVENT_FRAME, frame))
             except (BlockingIOError, InvalidDataError):
                 time.sleep(0.01)
                 if not self.block_frame:
                     # self.__send_to_listeners(EVENT_FRAME, None)
-                    self.event_buffer.put((EVENT_FRAME, None))
+                    if mode == 'thread':
+                        self.event_buffer_thread.put((EVENT_FRAME, None))
+                    if mode == 'process':
+                        self.event_buffer_process.put((EVENT_FRAME, None))
             except (ConnectionError, OSError) as e:  # Socket Closed
                 if self.alive:
                     # self.__send_to_listeners(EVENT_DISCONNECT)
-                    self.event_buffer.put((EVENT_DISCONNECT, None))
+                    if mode == 'thread':
+                        self.event_buffer_thread.put((EVENT_DISCONNECT, None))
+                    if mode == 'process':
+                        self.event_buffer_process.put((EVENT_DISCONNECT, None))
                     self.stop()
                     raise e
 

@@ -74,6 +74,8 @@ dependencies = [
     "nuitka>=1.8.5",
     "pipdeptree>=2.9.6",
     "pip>=23.3.1",
+    "numpy>=1.21.6",
+    "pyopengl>=3.1.7",
 ]
 requires-python = ">=3.7,<3.11"
 readme = "README.md"

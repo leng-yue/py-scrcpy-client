@@ -194,13 +194,9 @@ class QClient(QObject):
         # Wait for server to start
         self.__server_stream.read(10)
 
-    def start(self, threaded: bool = False, daemon: bool = False) -> None:
+    def start(self) -> None:
         """
         Start listening video stream
-
-        Args:
-            threaded: Run stream loop in a different thread to avoid blocking
-            daemon: Run stream loop in a daemon thread to avoid blocking
         """
         assert self.alive is False
         if self.alive:
@@ -212,22 +208,7 @@ class QClient(QObject):
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
 
-        if threaded or daemon:
-            self.stream_loop_thread = threading.Thread(
-                target=self._async_stream_loop, daemon=daemon
-            )
-            self.stream_loop_thread.start()
-        else:
-            self.__stream_loop()
-
-    def event_dispatcher_loop(self):
-        while self.alive:
-            try:
-                event, data = self.event_buffer.get_nowait()
-                self.__send_to_listeners(event, data)
-                del event, data
-            except queue.Empty:
-                time.sleep(0.01)
+        self.stream_loop_thread.start()
 
     def start_stream_connection(self) -> None:
         if self.alive:
@@ -299,6 +280,45 @@ class QClient(QObject):
                     self.__send_to_listeners(EVENT_DISCONNECT)
                     self.stop()
                     raise e
+
+    class StreamLoopThread(QThread):
+        lastFrame = Signal(object)
+        resolution = Signal(object)
+        event=Signal(str,object)
+        stop=Signal()
+        def __init__(self, socket: socket.socket):
+            super().__init__()
+            self.alive = True
+            self.socket = socket
+
+        def run(self):
+            codec = CodecContext.create("h264", "r")
+            while self.alive:
+                try:
+                    raw_h264 = self.socket.recv(0x10000)
+                    # self.buffer.put(raw_h264)
+                    if raw_h264 == b"":
+                        raise ConnectionError("Video stream is disconnected")
+                    packets = codec.parse(raw_h264)
+                    for packet in packets:
+                        frames = codec.decode(packet)
+                        for frame in frames:
+                            frame = frame.to_ndarray(format="bgr24")
+                            # if self.flip:
+                            #     frame = cv2.flip(frame, 1)
+                            self.lastFrame.emit(frame)
+                            self.resolution.emit((frame.shape[1], frame.shape[0]))
+                            self.event.emit(EVENT_FRAME, frame)
+                except (BlockingIOError, InvalidDataError):
+                    time.sleep(0.01)
+                    if not self.block_frame:
+                        self.__send_to_listeners(EVENT_FRAME, None)
+                except (ConnectionError, OSError) as e:  # Socket Closed
+                    if self.alive:
+                        self.__send_to_listeners(EVENT_DISCONNECT)
+                        self.stop()
+                        raise e
+
 
     def _async_stream_loop(self) -> None:
         """

@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
     ):
         super(MainWindow, self).__init__()
         self.serial = serial
-        self.__frame_time_window = queue.Queue(10)
+        self.__frame_time_window = queue.Queue(30)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.max_width = max_width
@@ -77,6 +77,9 @@ class MainWindow(QMainWindow):
         self.ui.button_record_click.clicked.connect(self.on_click_record_click)
         self.ui.button_take_region.clicked.connect(self.on_click_take_region_screenshot)
         self.ui.button_show_log.clicked.connect(self.logger.show)
+
+        self.ui.button_screen_on.clicked.connect(self.on_click_screen_on)
+        self.ui.button_screen_off.clicked.connect(self.on_click_screen_off)
 
         # Bind config
         self.ui.combo_device.currentTextChanged.connect(self.choose_device)
@@ -146,6 +149,14 @@ class MainWindow(QMainWindow):
         self.client.control.keycode(scrcpy.KEYCODE_APP_SWITCH, scrcpy.ACTION_DOWN)
         self.client.control.keycode(scrcpy.KEYCODE_APP_SWITCH, scrcpy.ACTION_UP)
         self.logger.info("Switch clicked")
+
+    def on_click_screen_on(self):
+        # enable phone screen
+        self.client.control.set_screen_power_mode(scrcpy.POWER_MODE_NORMAL)
+
+    def on_click_screen_off(self):
+        # disable screen
+        self.client.control.set_screen_power_mode(scrcpy.POWER_MODE_OFF)
 
     def on_click_record_click(self):
         if not self.mouse_recorder.is_recording:
@@ -261,6 +272,7 @@ class MainWindow(QMainWindow):
 
     def on_frame(self, frame: np.ndarray):
         QApplication.processEvents()
+        self.ui.label.update()
         if frame is not None:
             ratio = self.max_width / max(self.client.resolution)
             image = QImage(
@@ -354,7 +366,8 @@ def main():
         )
         return
     m.show()
-    m.client.start()
+    m.client.start(daemon_thread=True)
+    m.client.event_dispatcher_thread_loop()
     m.close_window()
     while s := m.serial:
         m.deleteLater()
