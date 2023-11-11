@@ -76,6 +76,7 @@ dependencies = [
     "pip>=23.3.1",
     "numpy>=1.21.6",
     "pyopengl>=3.1.7",
+    "sphinx>=4.3.2",
 ]
 requires-python = ">=3.7,<3.11"
 readme = "README.md"

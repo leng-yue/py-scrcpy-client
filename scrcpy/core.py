@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import queue
 import socket
@@ -36,6 +35,7 @@ class Client:
         lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
         connection_timeout: int = 3000,
         encoder_name: Optional[str] = None,
+        receive_buffer_size: int = 0x10000,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -51,6 +51,7 @@ class Client:
             lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
             connection_timeout: timeout for connection, unit is ms
             encoder_name: encoder name, enum: [OMX.google.h264.encoder, OMX.qcom.video.encoder.avc, c2.qti.avc.encoder, c2.android.avc.encoder], default is None (Auto)
+            receive_buffer_size: receive buffer size, default is 0x10000
         """
         # Check Params
         assert max_width >= 0, "max_width must be greater than or equal to 0"
@@ -80,6 +81,7 @@ class Client:
         self.lock_screen_orientation = lock_screen_orientation
         self.connection_timeout = connection_timeout
         self.encoder_name = encoder_name
+        self.receive_buffer_size = receive_buffer_size
 
         # Connect to device
         if device is None:
@@ -109,7 +111,7 @@ class Client:
 
         # Buffer
         self.event_buffer_thread = queue.Queue()
-        self.event_buffer_process = multiprocessing.Queue()
+        # self.event_buffer_process = multiprocessing.Queue()
 
     def __init_server_connection(self) -> None:
         """
@@ -183,15 +185,12 @@ class Client:
         # Wait for server to start
         self.__server_stream.read(10)
 
-    def start(self, daemon_thread: bool = False,daemon_process:bool=False) -> None:
+    def start(self, daemon_thread: bool = False) -> None:
         """
         Start listening video stream
 
         Args:
-            threaded: Run stream loop in a different thread to avoid blocking
             daemon_thread: Run stream loop in a daemon thread to avoid blocking
-            daemon_process: Run stream loop in a daemon process to avoid blocking
-
         """
         assert self.alive is False
         if self.alive:
@@ -205,14 +204,9 @@ class Client:
 
         if daemon_thread:
             self.stream_loop_thread = threading.Thread(
-                target=self._async_stream_loop, daemon=True
+                target=self._async_stream_loop, daemon=True,kwargs={'receive_buffer_size':self.receive_buffer_size}
             )
             self.stream_loop_thread.start()
-        elif daemon_process:
-            self.stream_loop_process = multiprocessing.Process(
-                target=self._async_stream_loop, daemon=True
-            )
-            self.stream_loop_process.start()
         else:
             self.__stream_loop()
 
@@ -220,15 +214,6 @@ class Client:
         while self.alive:
             try:
                 event, data = self.event_buffer_thread.get_nowait()
-                self.__send_to_listeners(event, data)
-                del event, data
-            except queue.Empty:
-                time.sleep(0.01)
-
-    def event_dispatcher_process_loop(self):
-        while self.alive:
-            try:
-                event, data = self.event_buffer_process.get_nowait()
                 self.__send_to_listeners(event, data)
                 del event, data
             except queue.Empty:
@@ -269,6 +254,7 @@ class Client:
         if self.stream_loop_thread is not None:
             try:
                 self.stream_loop_thread.join()
+                self.stream_loop_thread = None
             except Exception:
                 pass
 
@@ -281,7 +267,7 @@ class Client:
         codec = CodecContext.create("h264", "r")
         while self.alive:
             try:
-                raw_h264 = self.__video_socket.recv(0x10000)
+                raw_h264 = self.__video_socket.recv(self.receive_buffer_size)
                 # self.buffer.put(raw_h264)
                 if raw_h264 == b"":
                     raise ConnectionError("Video stream is disconnected")
@@ -307,15 +293,16 @@ class Client:
             except Exception as e:
                 print(e)
 
-    def _async_stream_loop(self,mode='thread') -> None:
+    def _async_stream_loop(self,receive_buffer_size:int,mode='thread') -> None:
         """
         Core loop for video parsing
-        :param mode: thread or process
+        :param mode: thread or process, process is not supported currently
+        :param receive_buffer_size: receive buffer size
         """
         codec = CodecContext.create("h264", "r")
         while self.alive:
             try:
-                raw_h264 = self.__video_socket.recv(0x10000)
+                raw_h264 = self.__video_socket.recv(receive_buffer_size)
                 # self.buffer.put(raw_h264)
                 if raw_h264 == b"":
                     raise ConnectionError("Video stream is disconnected")
@@ -332,23 +319,17 @@ class Client:
 
                         if mode == 'thread':
                             self.event_buffer_thread.put((EVENT_FRAME, frame))
-                        elif mode == 'process':
-                            self.event_buffer_process.put((EVENT_FRAME, frame))
             except (BlockingIOError, InvalidDataError):
                 time.sleep(0.01)
                 if not self.block_frame:
                     # self.__send_to_listeners(EVENT_FRAME, None)
                     if mode == 'thread':
                         self.event_buffer_thread.put((EVENT_FRAME, None))
-                    if mode == 'process':
-                        self.event_buffer_process.put((EVENT_FRAME, None))
             except (ConnectionError, OSError) as e:  # Socket Closed
                 if self.alive:
                     # self.__send_to_listeners(EVENT_DISCONNECT)
                     if mode == 'thread':
                         self.event_buffer_thread.put((EVENT_DISCONNECT, None))
-                    if mode == 'process':
-                        self.event_buffer_process.put((EVENT_DISCONNECT, None))
                     self.stop()
                     raise e
 

@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:1d1df6b3a8968a4918a4b85a87bbf00f3e07a6a4428443569128739c3a38f492"
+content_hash = "sha256:b3875f1441f6b1c6817243bebff5e46a2b015605bb595027d87d86e3ab47e232"
 
 [[package]]
 name = "adbutils"
