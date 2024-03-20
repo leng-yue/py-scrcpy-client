@@ -61,7 +61,7 @@ class ControlSender:
 
     @inject(const.TYPE_INJECT_TOUCH_EVENT)
     def touch(
-        self, x: int, y: int, action: int = const.ACTION_DOWN, touch_id: int = -1
+        self, x: int, y: int, action: int = const.ACTION_DOWN, touch_id: int = 0x1234567887654321
     ) -> bytes:
         """
         Touch screen
@@ -74,7 +74,7 @@ class ControlSender:
         """
         x, y = max(x, 0), max(y, 0)
         return struct.pack(
-            ">BqiiHHHi",
+            ">BqiiHHHii",
             action,
             touch_id,
             int(x),
@@ -82,6 +82,7 @@ class ControlSender:
             int(self.parent.resolution[0]),
             int(self.parent.resolution[1]),
             0xFFFF,
+            1,
             1,
         )
 

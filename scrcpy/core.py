@@ -150,22 +150,19 @@ class Client:
             "app_process",
             "/",
             "com.genymobile.scrcpy.Server",
-            "1.20",  # Scrcpy server version
-            "info",  # Log level: info, verbose...
-            f"{self.max_width}",  # Max screen width (long side)
-            f"{self.bitrate}",  # Bitrate of video
-            f"{self.max_fps}",  # Max frame per second
-            f"{self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
-            "true",  # Tunnel forward
-            "-",  # Crop screen
-            "false",  # Send frame rate to client
-            "true",  # Control enabled
-            "0",  # Display id
-            "false",  # Show touches
-            "true" if self.stay_awake else "false",  # Stay awake
-            "-",  # Codec (video encoding) options
-            self.encoder_name or "-",  # Encoder name
-            "false",  # Power off screen after server closed
+            "2.4",  # Scrcpy server version
+            "log_level=info",
+            f"max_size={self.max_width}",
+            f"max_fps={self.max_fps}",
+            f"video_bit_rate={self.bitrate}",
+            "tunnel_forward=true",
+            "send_frame_meta=false",
+            "control=true",
+            "audio=false",
+            "show_touches=false",
+            "stay_awake=false",
+            "power_off_on_close=false",
+            "clipboard_autosync=false"
         ]
 
         self.__server_stream: AdbConnection = self.device.shell(
