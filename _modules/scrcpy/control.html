@@ -41,7 +41,7 @@
 
 
 <div class="viewcode-block" id="inject"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.inject">[docs]</a><span class="k">def</span> <span class="nf">inject</span><span class="p">(</span><span class="n">control_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inject control code, with this inject, we will be able to do unit test</span>
 
 <span class="sd">    Args:</span>
@@ -70,7 +70,7 @@
     <span class="k">def</span> <span class="nf">keycode</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">keycode</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">repeat</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send keycode to device</span>
 
 <span class="sd">        Args:</span>
@@ -82,7 +82,7 @@
 
 <div class="viewcode-block" id="ControlSender.text"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.text">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_TEXT</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send text to device</span>
 
 <span class="sd">        Args:</span>
@@ -96,7 +96,7 @@
     <span class="k">def</span> <span class="nf">touch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">touch_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Touch screen</span>
 
 <span class="sd">        Args:</span>
@@ -120,7 +120,7 @@
 
 <div class="viewcode-block" id="ControlSender.scroll"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.scroll">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_SCROLL_EVENT</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">scroll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Scroll screen</span>
 
 <span class="sd">        Args:</span>
@@ -143,7 +143,7 @@
 
 <div class="viewcode-block" id="ControlSender.back_or_turn_screen_on"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.back_or_turn_screen_on">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_BACK_OR_SCREEN_ON</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">back_or_turn_screen_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If the screen is off, it is turned on only on ACTION_DOWN</span>
 
 <span class="sd">        Args:</span>
@@ -153,27 +153,27 @@
 
 <div class="viewcode-block" id="ControlSender.expand_notification_panel"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.expand_notification_panel">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_EXPAND_NOTIFICATION_PANEL</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">expand_notification_panel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Expand notification panel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ControlSender.expand_settings_panel"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.expand_settings_panel">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_EXPAND_SETTINGS_PANEL</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">expand_settings_panel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Expand settings panel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ControlSender.collapse_panels"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.collapse_panels">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_COLLAPSE_PANELS</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">collapse_panels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collapse all panels</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ControlSender.get_clipboard"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.get_clipboard">[docs]</a>    <span class="k">def</span> <span class="nf">get_clipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get clipboard</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Since this function need socket response, we can&#39;t auto inject it any more</span>
@@ -200,7 +200,7 @@
 
 <div class="viewcode-block" id="ControlSender.set_clipboard"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.set_clipboard">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_SET_CLIPBOARD</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">set_clipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">paste</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set clipboard</span>
 
 <span class="sd">        Args:</span>
@@ -212,7 +212,7 @@
 
 <div class="viewcode-block" id="ControlSender.set_screen_power_mode"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.set_screen_power_mode">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_SET_SCREEN_POWER_MODE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">set_screen_power_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">POWER_MODE_NORMAL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set screen power mode</span>
 
 <span class="sd">        Args:</span>
@@ -222,7 +222,7 @@
 
 <div class="viewcode-block" id="ControlSender.rotate_device"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.rotate_device">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_ROTATE_DEVICE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">rotate_device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rotate device</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span></div>
@@ -236,7 +236,7 @@
         <span class="n">move_step_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">move_steps_delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.005</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Swipe on screen</span>
 
 <span class="sd">        Args:</span>
