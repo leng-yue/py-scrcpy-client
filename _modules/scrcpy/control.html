@@ -94,7 +94,7 @@
 
 <div class="viewcode-block" id="ControlSender.touch"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.control.ControlSender.touch">[docs]</a>    <span class="nd">@inject</span><span class="p">(</span><span class="n">const</span><span class="o">.</span><span class="n">TYPE_INJECT_TOUCH_EVENT</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">touch</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">touch_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">,</span> <span class="n">touch_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mh">0x1234567887654321</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Touch screen</span>
@@ -107,7 +107,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
-            <span class="s2">&quot;&gt;BqiiHHHi&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&gt;BqiiHHHii&quot;</span><span class="p">,</span>
             <span class="n">action</span><span class="p">,</span>
             <span class="n">touch_id</span><span class="p">,</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
@@ -115,6 +115,7 @@
             <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
             <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
             <span class="mh">0xFFFF</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
             <span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span></div>
 
