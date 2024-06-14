@@ -1,10 +1,14 @@
 import pathlib
 import pickle
+from io import BytesIO
+from time import sleep
 
+import av
 import pytest
 from adbutils import AdbError
+from av import Packet
 
-from scrcpy import Client
+from scrcpy import Client , Recording_mode  , EVENT_FRAME
 from tests.utils import FakeStream
 
 
@@ -110,3 +114,47 @@ def test_parse_video():
     assert frames[0] is None
     assert frames[1].shape == (800, 368, 3)
     assert frames[2].shape == (800, 368, 3)
+
+
+def test_parse_audio():
+    # Load test data
+    video_data = pickle.load(
+        (pathlib.Path(__file__).parent / "test_video_data.pkl").resolve().open("rb")
+    )
+
+    audio_data = None
+    data = [
+        [b"\x00", b"test", b"\x07\x80\x04\x38", None] + video_data + [b"OSError"],
+        [],
+    ]
+    frames = []
+
+    # Create client
+    client = Client(device=FakeADBDevice(data), recording_mode = Recording_mode.NO_VIDEO)
+
+#to remove
+def test_parse_audio_live():
+    output = av.open("opus_stream.ogg", "w")
+
+    out_stream = output.add_stream ("vorbis"  )
+    def on_audio_stream(buffer:list[Packet] ):
+        for packet in buffer :
+            if packet.dts is None :
+                continue
+            packet.stream = out_stream
+
+            output.mux ( packet )
+        print(f"write buffer {len(buffer)}")
+        pass
+
+    # Create client
+    client = Client(device="emulator-5554", recording_mode = Recording_mode.NO_VIDEO)
+    client.add_listener(EVENT_FRAME, on_audio_stream)
+    client.start(threaded = True)
+
+
+    sleep(10)
+    client.stop()
+    sleep ( 1 )
+
+    output.close()

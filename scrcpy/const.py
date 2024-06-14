@@ -1,6 +1,7 @@
 """
 This module includes all consts used in this project
 """
+from enum import Enum , auto
 
 # Action
 ACTION_DOWN = 0
@@ -324,3 +325,8 @@ LOCK_SCREEN_ORIENTATION_3 = 3
 # Screen power mode
 POWER_MODE_OFF = 0
 POWER_MODE_NORMAL = 2
+
+# recording mode
+class Recording_mode(Enum):
+    NO_AUDIO = auto()
+    NO_VIDEO = auto()
