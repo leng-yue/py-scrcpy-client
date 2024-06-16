@@ -342,7 +342,7 @@ class Client:
                         raise e
             elif self.recording_mode == Recording_mode.NO_VIDEO :
                 try:
-                    windows_size = 10
+                    windows_size = 30
                     packets = []
                     while(windows_size > 0 and self.alive):
                         pts_header_buffer =  self.__audio_socket.recv ( 8 )
