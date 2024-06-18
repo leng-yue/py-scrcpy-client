@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrcpy-client"
-version = "0.5.x"
+version = "0.5.0"
 description = "A client of scrcpy"
 authors = ["lengyue <lengyue@lengyue.me>"]
 readme = "README.md"
@@ -20,7 +20,7 @@ python = ">=3.9,<3.13"
 av = "^12.1.0"
 opencv-python = "^4.8.0"
 adbutils = "<2.0.0"
-numpy = "= 1.26.4"
+numpy = "<= 1.26.4"
 
 
 # Optional dependencies for ui
