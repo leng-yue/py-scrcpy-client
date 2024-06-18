@@ -198,7 +198,8 @@ class Client:
             if not len ( self.device_name ) :
                 raise ConnectionError ( "Did not receive Device Name!" )
             codec = self.__audio_socket.recv ( 4 )
-            self.codec = codec.decode("utf-8")
+            self.codec = self.codec_handler(codec.decode("utf-8"))
+
             #self.__audio_socket.setblocking ( False )
 
 
@@ -351,6 +352,7 @@ class Client:
 
                         pts_flags = struct.unpack(">Q", pts_header_buffer)
 
+                        #TODO check flags from packet and adapt config
                         #if (pts_flags & SC_PACKET_FLAG_CONFIG) :
                         #    pts = AV_NOPTS_VALUE
                         #else:
