@@ -306,6 +306,12 @@ class Client:
                 self.__video_socket.close()
             except Exception:
                 pass
+        if self.__audio_socket is not None :
+            try :
+                self.__audio_socket.close ()
+            except Exception :
+                pass
+
 
     def __stream_loop(self) -> None:
         """
