@@ -6,7 +6,6 @@ import time
 from time import sleep
 from typing import Any, Callable, Optional, Tuple, Union
 
-import cv2
 import numpy as np
 from adbutils import AdbConnection, AdbDevice, AdbError, Network, adb
 from av.codec import CodecContext
@@ -44,7 +43,7 @@ class Client:
             bitrate: bitrate
             max_fps: maximum fps, 0 means not limited (supported after android 10)
             flip: flip the video
-            block_frame: only return nonempty frames, may block cv2 render thread
+            block_frame: only return nonempty frames
             stay_awake: keep Android device awake
             lock_screen_orientation: lock screen orientation, LOCK_SCREEN_ORIENTATION_*
             connection_timeout: timeout for connection, unit is ms
@@ -235,7 +234,7 @@ class Client:
                     for frame in frames:
                         frame = frame.to_ndarray(format="bgr24")
                         if self.flip:
-                            frame = cv2.flip(frame, 1)
+                            frame = frame[:, ::-1, :]
                         self.last_frame = frame
                         self.resolution = (frame.shape[1], frame.shape[0])
                         self.__send_to_listeners(EVENT_FRAME, frame)
