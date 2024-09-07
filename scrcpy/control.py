@@ -61,7 +61,11 @@ class ControlSender:
 
     @inject(const.TYPE_INJECT_TOUCH_EVENT)
     def touch(
-        self, x: int, y: int, action: int = const.ACTION_DOWN, touch_id: int = 0x1234567887654321
+        self,
+        x: int,
+        y: int,
+        action: int = const.ACTION_DOWN,
+        touch_id: int = 0x1234567887654321,
     ) -> bytes:
         """
         Touch screen
