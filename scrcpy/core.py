@@ -68,12 +68,7 @@ class Client:
             "c2.qti.avc.encoder",
             "c2.android.avc.encoder",
         ]
-        assert codec_name in [
-            None, 
-            "h264", 
-            "h265", 
-            "av1"
-        ]
+        assert codec_name in [None, "h264", "h265", "av1"]
 
         # Params
         self.flip = flip
@@ -163,7 +158,9 @@ class Client:
             f"max_size={self.max_width}",
             f"max_fps={self.max_fps}",
             f"video_bit_rate={self.bitrate}",
-            f"video_encoder={self.encoder_name}" if self.encoder_name else "video_encoder=OMX.google.h264.encoder",
+            f"video_encoder={self.encoder_name}"
+            if self.encoder_name
+            else "video_encoder=OMX.google.h264.encoder",
             f"video_codec={self.codec_name}" if self.codec_name else "video_codec=h264",
             "tunnel_forward=true",
             "send_frame_meta=false",

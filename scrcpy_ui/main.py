@@ -4,10 +4,9 @@ from typing import Optional
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from ui_main import Ui_MainWindow
 
 import scrcpy
-
-from ui_main import Ui_MainWindow
 
 if not QApplication.instance():
     app = QApplication([])
@@ -40,7 +39,7 @@ class MainWindow(QMainWindow):
             flip=self.ui.flip.isChecked(),
             bitrate=1000000000,
             encoder_name=encoder_name,
-            max_fps=60
+            max_fps=60,
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
