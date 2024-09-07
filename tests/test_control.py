@@ -1,3 +1,11 @@
+"""Tests adapted from https://github.com/Genymobile/scrcpy/blob/v2.4/app/tests/test_control_msg_serialize.c
+
+           make sure to compare to the version we are targeting ^^^^
+
+See https://github.com/Genymobile/scrcpy/issues/673#issuecomment-516360374
+"""
+
+
 import threading
 
 import scrcpy
@@ -34,12 +42,13 @@ def test_control_touch():
     assert control.touch(100, 200, scrcpy.ACTION_DOWN) == (
         b"\x02"  # TYPE_INJECT_TOUCH_EVENT
         + b"\x00"  # ACTION_DOWN
-        + b"\xff\xff\xff\xff\xff\xff\xff\xff"  # Virtual touch id
+        + b"\x12\x34\x56\x78\x87\x65\x43\x21"  # pointer id
         + b"\x00\x00\x00\x64"  # X: 100
         + b"\x00\x00\x00\xc8"  # Y: 200
         + b"\x07\x80\x04\x38"  # Resolution: (1920, 1080)
         + b"\xff\xff"  # Pressure: 100%
-        + b"\x00\x00\x00\x01"  # Primary button
+        + b"\x00\x00\x00\x01"  # AMOTION_EVENT_BUTTON_PRIMARY (action button)
+        + b"\x00\x00\x00\x01"  # AMOTION_EVENT_BUTTON_PRIMARY (buttons)
     )
 
 
