@@ -174,7 +174,6 @@ class Client:
             "power_off_on_close=false",
             "clipboard_autosync=false",
         ]
-        print(commands)
 
         self.__server_stream: AdbConnection = self.device.shell(
             commands,
