@@ -15,8 +15,8 @@ jobs:
     strategy:
       matrix:
         # Should match the python versions in pyproject.toml and publish.yml
-        python-version: ["3.10"]
-        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
