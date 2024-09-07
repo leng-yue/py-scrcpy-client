@@ -18,7 +18,7 @@ py-scrcpy = "scrcpy_ui:main"
 # Should match the python versions in .github/workflows/ci.yml and publish.yml
 python = ">=3.9,<3.13"
 av = "^12"
-opencv-python = "^4.5.0"
+numpy = "^2"
 adbutils = "^1.0.8"
 
 # Optional dependencies for ui
