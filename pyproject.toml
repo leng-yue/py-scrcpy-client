@@ -27,7 +27,7 @@ PySide6 = { version = "^6.0.0", optional = true }
 [tool.poetry.extras]
 ui = ["PySide6"]
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 flake8 = "^7"
 isort = "*"
 black = "^22.3.0"

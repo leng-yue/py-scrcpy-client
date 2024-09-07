@@ -1351,4 +1351,4 @@ ui = ["PySide6"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "5fc9fb3cc1a7f8c7078044fa5632156f4afc2fa0c19f4e15e438e50f8b4534c4"
+content-hash = "217a951a03fd7c276a93018bfc24a54f3b722df613728a7faa15f51883d1c54f"
