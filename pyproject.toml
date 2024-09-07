@@ -19,7 +19,7 @@ py-scrcpy = "scrcpy_ui:main"
 python = ">=3.9,<3.13"
 av = "^12"
 numpy = "^2"
-adbutils = "^1.0.8"
+adbutils = "^2"
 
 # Optional dependencies for ui
 PySide6 = { version = "^6.0.0", optional = true }
