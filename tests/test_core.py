@@ -34,6 +34,16 @@ class FakeADBDevice:
         return FakeStream(self.data.pop(0))
 
 
+class RecordingADBDevice(FakeADBDevice):
+    def __init__(self, data):
+        super().__init__(data)
+        self.commands = None
+
+    def shell(self, commands, stream=True):
+        self.commands = commands
+        return FakeStream([b"\x00" * 128])
+
+
 def test_connection():
     client = Client(
         device=FakeADBDevice([[b"\x00", b"test", b"\x07\x80\x04\x38"], []], wait=3)
@@ -82,6 +92,28 @@ def test_init_listener():
 
     client.add_listener("init", on_init)
     client.start(threaded=True)
+
+
+def test_control_only_session_forwards_server_options():
+    device = RecordingADBDevice([[]])
+    client = Client(
+        device=device,
+        video=False,
+        turn_screen_off=True,
+        stay_awake=False,
+    )
+
+    client.start(threaded=True)
+
+    assert client.device_name is None
+    assert client.resolution is None
+    assert device.commands[-2:] == [
+        "turn_screen_off=true",
+        "stay_awake=false",
+    ]
+    assert "video=false" in device.commands
+    assert client.stream_loop_thread is None
+    client.stop()
 
 
 def test_parse_video():

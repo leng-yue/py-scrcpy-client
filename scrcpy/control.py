@@ -144,6 +144,14 @@ class ControlSender:
         """
         return b""
 
+    @inject(const.TYPE_START_APP)
+    def start_app(self, package_name: str) -> bytes:
+        """
+        Start app
+        """
+        utf8_package_name = package_name.encode("utf-8")
+        return struct.pack(">b", len(utf8_package_name)) + utf8_package_name
+
     def get_clipboard(self) -> str:
         """
         Get clipboard

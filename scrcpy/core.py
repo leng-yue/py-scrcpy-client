@@ -34,6 +34,10 @@ class Client:
         connection_timeout: int = 3000,
         encoder_name: Optional[str] = None,
         codec_name: Optional[str] = None,
+        new_display: Union[str, bool] = False,
+        start_app: Optional[str] = None,
+        video: bool = True,
+        **kwargs: Any,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -50,6 +54,13 @@ class Client:
             connection_timeout: timeout for connection, unit is ms
             encoder_name: encoder name, enum: [OMX.google.h264.encoder, OMX.qcom.video.encoder.avc, c2.qti.avc.encoder, c2.android.avc.encoder], default is None (Auto)
             codec_name: codec name, enum: [h264, h265, av1], default is None (Auto)
+            new_display: create and mirror a virtual display in the format [<width>x<height>][/<dpi>]
+            start_app: package name or activity to launch after the control connection opens
+            video: enable the video stream. Set to False for a control-only session.
+            **kwargs: additional scrcpy-server options. Every item is forwarded to the
+                server as ``key=value``; boolean values are serialized as ``true`` or
+                ``false``. The option names and values must be supported by the bundled
+                scrcpy-server version.
         """
         # Check Params
         assert max_width >= 0, "max_width must be greater than or equal to 0"
@@ -69,6 +80,28 @@ class Client:
             "c2.android.avc.encoder",
         ]
         assert codec_name in [None, "h264", "h265", "av1"]
+        assert isinstance(video, bool), "video must be a boolean"
+
+        # Check new_display format
+        if new_display:
+            if new_display == True:
+                # Use default value, no need to check
+                new_display = ""
+            else:
+                # Check format [<width>x<height>][/<dpi>]
+                parts = new_display.split("/")
+                if len(parts) > 2:
+                    raise ValueError("Invalid new_display format. Expected format: [<width>x<height>][/<dpi>]")
+                
+                # Check resolution part
+                if parts[0]:
+                    width, height = map(int, parts[0].split("x"))
+                    assert width > 0 and height > 0, "Invalid resolution format. Expected format: <width>x<height>"
+                
+                # Check DPI part
+                if len(parts) == 2:
+                    dpi = int(parts[1])
+                    assert dpi > 0, "DPI must be a positive integer"
 
         # Params
         self.flip = flip
@@ -81,6 +114,11 @@ class Client:
         self.connection_timeout = connection_timeout
         self.encoder_name = encoder_name
         self.codec_name = codec_name
+        self.new_display = new_display
+        self.start_app = start_app
+        self.video = video
+        self.server_options = kwargs
+
 
         # Connect to device
         if device is None:
@@ -112,38 +150,43 @@ class Client:
         Connect to android server, there will be two sockets, video and control socket.
         This method will set: video_socket, control_socket, resolution variables
         """
-        for _ in range(self.connection_timeout // 100):
-            try:
-                self.__video_socket = self.device.create_connection(
-                    Network.LOCAL_ABSTRACT, "scrcpy"
-                )
-                break
-            except AdbError:
-                sleep(0.1)
-                pass
-        else:
-            raise ConnectionError("Failed to connect scrcpy-server after 3 seconds")
+        if self.video:
+            for _ in range(self.connection_timeout // 100):
+                try:
+                    self.__video_socket = self.device.create_connection(
+                        Network.LOCAL_ABSTRACT, "scrcpy"
+                    )
+                    break
+                except AdbError:
+                    sleep(0.1)
+                    pass
+            else:
+                raise ConnectionError("Failed to connect scrcpy-server after 3 seconds")
 
-        dummy_byte = self.__video_socket.recv(1)
-        if not len(dummy_byte) or dummy_byte != b"\x00":
-            raise ConnectionError("Did not receive Dummy Byte!")
+            dummy_byte = self.__video_socket.recv(1)
+            if not len(dummy_byte) or dummy_byte != b"\x00":
+                raise ConnectionError("Did not receive Dummy Byte!")
 
+        # With video disabled, scrcpy accepts only this control connection and sends
+        # no video metadata. Do not open or read a video socket in that mode.
         self.control_socket = self.device.create_connection(
             Network.LOCAL_ABSTRACT, "scrcpy"
         )
-        self.device_name = self.__video_socket.recv(64).decode("utf-8").rstrip("\x00")
-        if not len(self.device_name):
-            raise ConnectionError("Did not receive Device Name!")
 
-        res = self.__video_socket.recv(4)
-        self.resolution = struct.unpack(">HH", res)
-        self.__video_socket.setblocking(False)
+        if self.video:
+            self.device_name = self.__video_socket.recv(64).decode("utf-8").rstrip("\x00")
+            if not len(self.device_name):
+                raise ConnectionError("Did not receive Device Name!")
+
+            res = self.__video_socket.recv(4)
+            self.resolution = struct.unpack(">HH", res)
+            self.__video_socket.setblocking(False)
 
     def __deploy_server(self) -> None:
         """
         Deploy server to android device
         """
-        jar_name = "scrcpy-server.jar"
+        jar_name = "scrcpy-server-v3.1"
         server_file_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), jar_name
         )
@@ -153,7 +196,7 @@ class Client:
             "app_process",
             "/",
             "com.genymobile.scrcpy.Server",
-            "2.4",  # Scrcpy server version
+            "3.1",  # Scrcpy server version
             "log_level=info",
             f"max_size={self.max_width}",
             f"max_fps={self.max_fps}",
@@ -164,6 +207,7 @@ class Client:
             f"video_codec={self.codec_name}" if self.codec_name else "video_codec=h264",
             "tunnel_forward=true",
             "send_frame_meta=false",
+            f"video={str(self.video).lower()}",
             "control=true",
             "audio=false",
             "show_touches=false",
@@ -171,6 +215,15 @@ class Client:
             "power_off_on_close=false",
             "clipboard_autosync=false",
         ]
+        if self.new_display or self.new_display == '':
+            commands.append(f"new_display={self.new_display}")
+
+        # Preserve scrcpy's key=value command-line protocol for options that are not
+        # represented by dedicated Client parameters.
+        for key, value in self.server_options.items():
+            if isinstance(value, bool):
+                value = str(value).lower()
+            commands.append(f"{key}={value}")
 
         self.__server_stream: AdbConnection = self.device.shell(
             commands,
@@ -194,6 +247,12 @@ class Client:
         self.__init_server_connection()
         self.alive = True
         self.__send_to_listeners(EVENT_INIT)
+
+        if self.start_app:
+            self.control.start_app(self.start_app)
+
+        if not self.video:
+            return
 
         if threaded or daemon_threaded:
             self.stream_loop_thread = threading.Thread(
@@ -243,6 +302,7 @@ class Client:
                         frame = frame.to_ndarray(format="bgr24")
                         if self.flip:
                             frame = frame[:, ::-1, :]
+                            frame = np.ascontiguousarray(frame)
                         self.last_frame = frame
                         self.resolution = (frame.shape[1], frame.shape[0])
                         self.__send_to_listeners(EVENT_FRAME, frame)

@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, Union
 
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
@@ -20,6 +20,8 @@ class MainWindow(QMainWindow):
         max_width: Optional[int],
         serial: Optional[str] = None,
         encoder_name: Optional[str] = None,
+        new_display: Union[str, bool] = False,
+        start_app: Optional[str] = None,
     ):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
@@ -40,6 +42,8 @@ class MainWindow(QMainWindow):
             bitrate=1000000000,
             encoder_name=encoder_name,
             max_fps=60,
+            new_display=new_display,
+            start_app=start_app,
         )
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
@@ -183,10 +187,29 @@ def main():
         type=str,
         help="Select device manually (device serial required)",
     )
-    parser.add_argument("--encoder_name", type=str, help="Encoder name to use")
+    parser.add_argument("--encoder-name", type=str, help="Encoder name to use")
+    parser.add_argument(
+        "--new-display",
+        type=str,
+        # default="",
+        metavar="[<width>x<height>][/<dpi>]",
+        help="Create a new display with the specified resolution and density. If not provided, they default to the main display dimensions and DPI.\n"
+             "Examples:\n"
+             "  --new-display=1920x1080     # create display with 1920x1080 resolution\n"
+             "  --new-display=1920x1080/420 # create display with 1920x1080 resolution and 420 DPI\n"
+             "  --new-display              # use main display size and density\n"
+             "  --new-display=/240         # use main display size with 240 DPI",
+        nargs="?",
+        const="",
+    )
+    parser.add_argument(
+        "--start-app",
+        type=str,
+        help="Start app package name",
+    )
     args = parser.parse_args()
 
-    m = MainWindow(args.max_width, args.device, args.encoder_name)
+    m = MainWindow(args.max_width, args.device, args.encoder_name, args.new_display, args.start_app)
     m.show()
 
     m.client.start()
